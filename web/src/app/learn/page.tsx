@@ -6,17 +6,17 @@ import { education, Lang } from '@/lib/i18n';
 
 export default function LearnPage() {
   const [lang, setLang] = useState<Lang>('en');
-  const user = typeof window !== 'undefined' ? currentUser() : null;
+  const [back, setBack] = useState('/');
   const e = education[lang];
 
   useEffect(() => {
     const sync = () => setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
     sync();
+    const account = currentUser();
+    setBack(account?.role === 'CHILD' ? '/child' : account ? '/parent' : '/');
     window.addEventListener('safenest-lang', sync);
     return () => window.removeEventListener('safenest-lang', sync);
   }, []);
-
-  const back = user?.role === 'CHILD' ? '/child' : user ? '/parent' : '/';
 
   return (
     <main className="page">

@@ -6,12 +6,17 @@ import { copy, Lang } from '@/lib/i18n';
 
 export default function ChildHome() {
   const [lang, setLang] = useState<Lang>('en');
+  const [user, setUser] = useState<{ name?: string } | null>(null);
   const t = copy[lang];
-  const user = currentUser();
 
   useEffect(() => {
     setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
-    if (!currentUser()) window.location.href = '/login';
+    const account = currentUser();
+    if (!account) {
+      window.location.href = '/login';
+      return;
+    }
+    setUser(account);
   }, []);
 
   async function start(category: string) {
