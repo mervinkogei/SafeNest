@@ -4,7 +4,7 @@ export const copy = {
   en: {
     tagline: 'Protect. Understand. Act.',
     welcomeBody: 'A safer way to navigate difficult online situations — without watching, blaming, or taking over accounts.',
-    getStarted: 'Record an incident',
+    getStarted: 'Get started',
     haveAccount: 'I already have an account',
     learnFirst: 'Learn first',
     chooseRole: 'How will you use SafeNest?',
@@ -23,7 +23,7 @@ export const copy = {
   sw: {
     tagline: 'Linda. Elewa. Chukua hatua.',
     welcomeBody: 'Njia salama ya kushughulikia mambo magumu mtandaoni — bila kupeleleza, kulaumu, au kuchukua akaunti.',
-    getStarted: 'Rekodi tukio',
+    getStarted: 'Anza sasa',
     haveAccount: 'Nina akaunti tayari',
     learnFirst: 'Jifunze kwanza',
     chooseRole: 'Utatumia SafeNest vipi?',

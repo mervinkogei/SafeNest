@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { api, currentUser } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 const OPTIONS = [
   { id: 'bullying', label: 'Someone is bullying me' },
@@ -43,7 +44,7 @@ export default function ReportPage() {
   return (
     <main className="page">
       <div className="form-card" style={{ width: 'min(640px, 100%)' }}>
-      <a className="tiny muted" href={currentUser()?.role === 'CHILD' ? '/child' : '/parent'}>← Back</a>
+      <BackLink href={currentUser()?.role === 'CHILD' ? '/child' : '/parent'} label="Dashboard" />
       <h1>What happened?</h1>
       <form onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }}>
         {currentUser()?.role === 'PARENT' && (

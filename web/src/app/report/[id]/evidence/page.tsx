@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 export default function EvidencePage() {
   const { id } = useParams<{ id: string }>();
@@ -26,8 +27,8 @@ export default function EvidencePage() {
   }
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/report">← Back</a>
+    <main className="page">
+      <BackLink href="/report" />
       <h1>Add information</h1>
       <p className="tiny muted">A screenshot helps. If you cannot upload one, describe what you saw. SafeNest never asks for account passwords.</p>
       <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>

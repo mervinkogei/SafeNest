@@ -2,24 +2,44 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import BackLink from '@/components/BackLink';
+import { Icon, riskIcon } from '@/components/Icons';
 
 export default function LockerIndex() {
-  const [incidents, setIncidents] = useState<Array<{ id: string; riskType?: string; createdAt: string; status: string }>>([]);
+  const [incidents, setIncidents] = useState<Array<{
+    id: string;
+    riskType?: string;
+    createdAt: string;
+    status: string;
+    platform?: string;
+    severity?: string;
+  }>>([]);
   useEffect(() => {
     api('/incidents').then(setIncidents);
   }, []);
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/parent">← Dashboard</a>
+    <main className="page">
+      <BackLink href="/parent" label="Dashboard" />
       <h1>Evidence locker</h1>
-      <p className="tiny muted">You control this record. Delete anything you do not want SafeNest to keep.</p>
-      {incidents.map((item) => (
-        <a className="list-item" key={item.id} href={`/incidents/${item.id}/locker`}>
-          <b style={{ textTransform: 'capitalize' }}>{(item.riskType || 'Incident').replaceAll('_', ' ')}</b>
-          <div className="tiny muted">{new Date(item.createdAt).toLocaleDateString()} · {item.status.replaceAll('_', ' ')}</div>
-        </a>
-      ))}
+      <p className="muted">You control this record. Delete anything you do not want SafeNest to keep.</p>
+      <div className="locker-grid">
+        {incidents.map((item) => (
+          <article className="locker-card" key={item.id}>
+            <span className={`incident-icon ${item.severity || 'medium'}`}>
+              <Icon name={riskIcon(item.riskType)} />
+            </span>
+            <div className="incident-copy">
+              <b style={{ textTransform: 'capitalize' }}>{(item.riskType || 'Incident').replaceAll('_', ' ')}</b>
+              <p className="tiny muted">{new Date(item.createdAt).toLocaleDateString()} · {item.status.replaceAll('_', ' ')}</p>
+            </div>
+            <a className="btn secondary view-btn" href={`/incidents/${item.id}/locker`}>
+              <Icon name="eye" size={16} /> View
+            </a>
+          </article>
+        ))}
+      </div>
+      {!incidents.length && <p className="muted">No evidence stored yet.</p>}
     </main>
   );
 }

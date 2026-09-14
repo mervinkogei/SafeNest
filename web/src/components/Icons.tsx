@@ -11,6 +11,8 @@ export function Icon({ name, size = 22 }: { name: string; size?: number }) {
     'aria-hidden': true,
   };
   switch (name) {
+    case 'back':
+      return <svg {...props}><path d="M15 6l-6 6 6 6" /></svg>;
     case 'menu':
       return <svg {...props}><path d="M4 7h16M4 12h16M4 17h16" /></svg>;
     case 'close':

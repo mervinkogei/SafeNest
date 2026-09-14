@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { api, setSession } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 export default function RegisterPage() {
   const role = useMemo(() => {
@@ -39,7 +40,7 @@ export default function RegisterPage() {
   return (
     <main className="page">
       <div className="form-card">
-        <a className="tiny muted" href="/role">← Back</a>
+        <BackLink href="/role" />
         <h1>Create your SafeNest</h1>
         <p className="muted tiny">We only ask for a name and email. Children never share social-media passwords.</p>
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>

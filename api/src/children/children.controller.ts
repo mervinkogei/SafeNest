@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { IsIn, IsString } from 'class-validator';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -26,5 +26,15 @@ export class ChildrenController {
   @Get()
   list(@CurrentUser() user: User) {
     return this.children.list(user);
+  }
+
+  @Patch(':id')
+  update(@CurrentUser() user: User, @Param('id') id: string, @Body() dto: CreateChildDto) {
+    return this.children.update(user, id, dto.displayName, dto.ageRange);
+  }
+
+  @Delete(':id')
+  remove(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.children.remove(user, id);
   }
 }

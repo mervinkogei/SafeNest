@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { api, setSession } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -28,7 +29,7 @@ export default function LoginPage() {
   return (
     <main className="page">
       <div className="form-card">
-        <a className="tiny muted" href="/">← Home</a>
+        <BackLink href="/" label="Home" />
         <h1>Welcome back</h1>
         <p className="muted tiny">Demo: amani@safenest.ke or kito@safenest.ke / Safeguard123</p>
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>

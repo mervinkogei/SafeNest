@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { User } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
@@ -42,5 +42,25 @@ export class ChildrenService {
       return child;
     }
     return null;
+  }
+
+  async update(guardian: User, id: string, displayName: string, ageRange: string) {
+    const child = await this.prisma.child.findUnique({ where: { id } });
+    if (!child || child.guardianId !== guardian.id) throw new ForbiddenException();
+    return this.prisma.child.update({
+      where: { id },
+      data: { displayName: displayName.trim(), ageRange },
+    });
+  }
+
+  async remove(guardian: User, id: string) {
+    const child = await this.prisma.child.findUnique({ where: { id } });
+    if (!child || child.guardianId !== guardian.id) throw new ForbiddenException();
+    const incidents = await this.prisma.incident.count({ where: { childId: id } });
+    if (incidents) {
+      throw new BadRequestException('This profile still has incidents. Remove those from the evidence locker first.');
+    }
+    await this.prisma.child.delete({ where: { id } });
+    return { ok: true };
   }
 }

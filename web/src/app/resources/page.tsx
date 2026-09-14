@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 type Resource = {
   id: string;
@@ -22,10 +23,11 @@ export default function ResourcesPage() {
   }, []);
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/parent">← Dashboard</a>
+    <main className="page">
+      <BackLink href="/parent" label="Dashboard" />
       <h1>Trusted resources</h1>
       <p className="tiny muted">These contacts come from SafeNest’s verified database. The AI cannot invent phone numbers or organisations.</p>
+      <div className="locker-grid">
       {resources.map((item) => (
         <article className="card" key={item.id}>
           <div className="row">
@@ -38,6 +40,7 @@ export default function ResourcesPage() {
           <p className="tiny muted">Verified {new Date(item.verifiedAt).toLocaleDateString()} · {item.country} · Source: {item.source}</p>
         </article>
       ))}
+      </div>
     </main>
   );
 }

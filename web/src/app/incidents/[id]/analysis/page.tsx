@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 type Incident = {
   id: string;
@@ -34,15 +35,16 @@ export default function AnalysisPage() {
   const a = incident?.assessment;
   if (!a) {
     return (
-      <main className="screen">
+      <main className="page">
+        <BackLink href="/parent" label="Dashboard" />
         <p>Preparing a careful assessment…</p>
       </main>
     );
   }
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/parent">← Dashboard</a>
+    <main className="page">
+      <BackLink href="/parent" label="Dashboard" />
       <p className="tiny muted" style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}>AI safety analysis</p>
       <div className={`badge ${a.severity}`}>{a.immediateSafetyConcern ? 'Needs a trusted adult now' : 'Potential concern'}</div>
       <h1 style={{ textTransform: 'capitalize', margin: 0 }}>{a.riskType.replaceAll('_', ' ')} indicators</h1>

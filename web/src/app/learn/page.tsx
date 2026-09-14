@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { currentUser } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 import { education, Lang } from '@/lib/i18n';
 
 export default function LearnPage() {
@@ -20,7 +21,7 @@ export default function LearnPage() {
 
   return (
     <main className="page">
-      <a className="tiny muted" href={back}>← Back</a>
+      <BackLink href={back} />
       <div className="kicker">Safety guide</div>
       <h1>Learn before you record an incident</h1>
       <p className="muted" style={{ maxWidth: 720, fontSize: '1.1rem' }}>

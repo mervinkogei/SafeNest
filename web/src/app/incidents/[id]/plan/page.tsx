@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import BackLink from '@/components/BackLink';
 
 export default function PlanPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,8 +14,8 @@ export default function PlanPage() {
   }, [id]);
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href={`/incidents/${id}/analysis`}>← Analysis</a>
+    <main className="page">
+      <BackLink href={`/incidents/${id}/analysis`} label="Analysis" />
       <p className="tiny muted" style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}>What you can do next</p>
       <div className={`badge ${plan?.severity || 'serious'}`}>
         {plan?.immediateSafetyConcern ? 'Urgent human support' : 'Serious concern'}

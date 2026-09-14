@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { copy, Lang } from '@/lib/i18n';
+import BackLink from '@/components/BackLink';
 
 export default function RolePage() {
   const [lang, setLang] = useState<Lang>('en');
@@ -18,7 +19,7 @@ export default function RolePage() {
   return (
     <main className="page">
       <div className="form-card">
-        <a className="tiny muted" href="/learn">← Read the guide first</a>
+        <BackLink href="/learn" label="Safety guide" />
         <h1>{t.chooseRole}</h1>
         <p className="tiny muted">You can still go back and learn. Recording an incident comes after you understand what help looks like.</p>
         <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
