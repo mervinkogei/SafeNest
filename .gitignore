@@ -1,0 +1,15 @@
+node_modules
+dist
+.next
+.turbo
+.env
+.env.local
+*.db
+*.db-journal
+uploads
+coverage
+.DS_Store
+web/.next
+api/generated
+api/prisma/dev.db
+api/uploads

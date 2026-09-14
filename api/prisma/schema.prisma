@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PARENT
+  CHILD
+}
+
+enum IncidentStatus {
+  OPEN
+  NEEDS_ATTENTION
+  RESOLVED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  children     Child[]   @relation("GuardianChildren")
+  childProfile Child?    @relation("ChildAccount")
+  incidents    Incident[] @relation("ReporterIncidents")
+  notifications Notification[]
+}
+
+model Child {
+  id          String     @id @default(cuid())
+  guardianId  String
+  userId      String?    @unique
+  displayName String
+  ageRange    String
+  inviteCode  String     @unique
+  createdAt   DateTime   @default(now())
+  guardian    User       @relation("GuardianChildren", fields: [guardianId], references: [id])
+  user        User?      @relation("ChildAccount", fields: [userId], references: [id])
+  incidents   Incident[]
+}
+
+model Incident {
+  id          String         @id @default(cuid())
+  childId     String
+  reportedBy  String
+  platform    String
+  description String
+  category    String
+  riskType    String?
+  severity    String?
+  status      IncidentStatus @default(OPEN)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  child       Child          @relation(fields: [childId], references: [id])
+  reporter    User           @relation("ReporterIncidents", fields: [reportedBy], references: [id])
+  evidence    Evidence[]
+  assessment  AiAssessment?
+}
+
+model Evidence {
+  id         String   @id @default(cuid())
+  incidentId String
+  fileUrl    String
+  fileType   String
+  createdAt  DateTime @default(now())
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model AiAssessment {
+  id                      String   @id @default(cuid())
+  incidentId              String   @unique
+  riskType                String
+  severity                String
+  confidence              Float
+  indicators              String
+  explanation             String
+  immediateSafetyConcern  Boolean  @default(false)
+  recommendedActions      String
+  createdAt               DateTime @default(now())
+  incident                Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  name        String
+  country     String
+  riskTypes   String
+  description String
+  website     String
+  phone       String?
+  emergency   Boolean  @default(false)
+  verifiedAt  DateTime
+  source      String
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
