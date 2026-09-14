@@ -1,6 +1,7 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import SiteHeader from '@/components/SiteHeader';
+import AiGuide from '@/components/AiGuide';
 
 export const metadata = {
   title: 'SafeNest',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <SiteHeader />
         {children}
+        <AiGuide />
       </body>
     </html>
   );

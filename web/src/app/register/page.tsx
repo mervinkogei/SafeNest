@@ -1,8 +1,10 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { api, setSession } from '@/lib/api';
 import BackLink from '@/components/BackLink';
+import PasswordField from '@/components/PasswordField';
 
 export default function RegisterPage() {
   const role = useMemo(() => {
@@ -44,23 +46,24 @@ export default function RegisterPage() {
         <h1>Create your SafeNest</h1>
         <p className="muted tiny">We only ask for a name and email. Children never share social-media passwords.</p>
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
-        <label className="field">Name
-          <input name="name" required placeholder={role === 'CHILD' ? 'A name you like' : 'Your name'} />
-        </label>
-        <label className="field">Email
-          <input name="email" type="email" required placeholder="you@email.com" />
-        </label>
-        <label className="field">Password
-          <input name="password" type="password" minLength={8} required placeholder="At least 8 characters" />
-        </label>
-        {role === 'CHILD' && (
-          <label className="field">Family invite code
-            <input name="inviteCode" placeholder="NEST42" />
+          <label className="field">Name
+            <input name="name" required placeholder={role === 'CHILD' ? 'A name you like' : 'Your name'} />
           </label>
-        )}
-        {error && <div className="error">{error}</div>}
-        <button className="btn" disabled={loading}>{loading ? 'Saving…' : 'Continue'}</button>
-      </form>
+          <label className="field">Email
+            <input name="email" type="email" required placeholder="you@email.com" autoComplete="email" />
+          </label>
+          <PasswordField name="password" required minLength={8} placeholder="At least 8 characters" autoComplete="new-password" />
+          {role === 'CHILD' && (
+            <label className="field">Family invite code
+              <input name="inviteCode" placeholder="NEST42" />
+            </label>
+          )}
+          {error && <div className="error">{error}</div>}
+          <button className="btn" disabled={loading}>{loading ? 'Saving…' : 'Continue'}</button>
+        </form>
+        <p className="auth-links">
+          <Link href="/login">Already have an account? Sign in</Link>
+        </p>
       </div>
     </main>
   );

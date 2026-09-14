@@ -1,8 +1,10 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 import { api, setSession } from '@/lib/api';
 import BackLink from '@/components/BackLink';
+import PasswordField from '@/components/PasswordField';
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -34,11 +36,13 @@ export default function LoginPage() {
         <p className="muted tiny">Demo: amani@safenest.ke or kito@safenest.ke / Safeguard123</p>
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
           <label className="field">Email
-            <input name="email" type="email" required />
+            <input name="email" type="email" required autoComplete="email" />
           </label>
-          <label className="field">Password
-            <input name="password" type="password" required />
-          </label>
+          <PasswordField name="password" required autoComplete="current-password" />
+          <p className="auth-links">
+            <Link href="/forgot-password">Forgot password?</Link>
+            <Link href="/role">Create an account</Link>
+          </p>
           {error && <div className="error">{error}</div>}
           <button className="btn" disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</button>
         </form>

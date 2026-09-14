@@ -8,11 +8,13 @@ export function getToken() {
 export function setSession(token: string, user: unknown) {
   localStorage.setItem('safenest_token', token);
   localStorage.setItem('safenest_user', JSON.stringify(user));
+  window.dispatchEvent(new Event('safenest-session'));
 }
 
 export function clearSession() {
   localStorage.removeItem('safenest_token');
   localStorage.removeItem('safenest_user');
+  window.dispatchEvent(new Event('safenest-session'));
 }
 
 export function currentUser() {

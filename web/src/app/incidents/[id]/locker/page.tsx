@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { API_BASE, api, getToken } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import IncidentBriefing from '@/components/IncidentBriefing';
+import type { IncidentBriefing as Briefing } from '@/lib/briefing';
 
 type Incident = {
   id: string;
@@ -14,15 +16,18 @@ type Incident = {
   riskType?: string;
   severity?: string;
   assessment?: { explanation: string; riskType: string } | null;
-  evidence: Array<{ id: string; fileUrl: string; createdAt: string }>;
+  evidence: Array<{ id: string; fileUrl: string; createdAt: string; fileType?: string }>;
 };
 
 export default function LockerDetail() {
   const { id } = useParams<{ id: string }>();
   const [incident, setIncident] = useState<Incident | null>(null);
-  const [summary, setSummary] = useState('');
+  const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [pendingIncidentDelete, setPendingIncidentDelete] = useState(false);
+  const briefingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api(`/incidents/${id}`).then(setIncident);
@@ -39,6 +44,21 @@ export default function LockerDetail() {
     });
     const blob = await res.blob();
     img.src = URL.createObjectURL(blob);
+  }
+
+  async function generateBriefing() {
+    setError('');
+    setGenerating(true);
+    try {
+      const next = await api(`/incidents/${id}/summary`);
+      setBriefing(next);
+      setIncident(await api(`/incidents/${id}`));
+      setTimeout(() => briefingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not generate the briefing.');
+    } finally {
+      setGenerating(false);
+    }
   }
 
   if (!incident) {
@@ -62,29 +82,34 @@ export default function LockerDetail() {
         </div>
         <div className="card">
           <b>AI assessment</b>
-          <p>{incident.assessment?.explanation || 'Not analysed yet.'}</p>
+          <p>{incident.assessment?.explanation || 'Not analysed yet. Generating a briefing will also create a careful assessment.'}</p>
           <p className="tiny">Status: {incident.status.replaceAll('_', ' ')}</p>
-          <button
-            className="btn"
-            style={{ marginTop: 12 }}
-            onClick={() => setSummary(
-              `SafeNest incident summary\nDate: ${new Date(incident.createdAt).toLocaleString()}\nPlatform: ${incident.platform}\nPossible risk: ${(incident.riskType || 'unspecified').replaceAll('_', ' ')}\nSeverity: ${incident.severity || 'n/a'}\nThis is a record for a trusted adult. It is not a finding of guilt.`,
-            )}
-          >Generate Incident Summary</button>
-          {summary && <pre className="tiny" style={{ whiteSpace: 'pre-wrap', marginTop: 12 }}>{summary}</pre>}
+          <button className="btn" style={{ marginTop: 12 }} type="button" onClick={generateBriefing} disabled={generating}>
+            {generating ? 'Preparing briefing…' : briefing ? 'Refresh incident briefing' : 'Generate incident briefing'}
+          </button>
+          {error && <p className="tiny" style={{ color: '#9f1239', marginTop: 8 }}>{error}</p>}
         </div>
       </div>
+      {briefing && (
+        <div ref={briefingRef}>
+          <IncidentBriefing doc={briefing} />
+        </div>
+      )}
       <h3>Evidence</h3>
       {incident.evidence.length === 0 && <p className="muted">No screenshot stored yet.</p>}
       <div className="evidence-grid">
         {incident.evidence.map((item, index) => (
           <div className="card" key={item.id}>
-            <p>Screenshot {index + 1}</p>
-            <img
-              alt={`Screenshot ${index + 1}`}
-              style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover' }}
-              ref={(node) => { if (node) loadImage(item.fileUrl, node); }}
-            />
+            <p>{item.fileType?.startsWith('image/') ? `Screenshot ${index + 1}` : `File ${index + 1}`}</p>
+            {item.fileType?.startsWith('image/') !== false ? (
+              <img
+                alt={`Evidence ${index + 1}`}
+                style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover' }}
+                ref={(node) => { if (node && (item.fileType?.startsWith('image/') || !item.fileType)) loadImage(item.fileUrl, node); }}
+              />
+            ) : (
+              <p className="tiny muted">{item.fileType}</p>
+            )}
             <button
               className="btn secondary"
               style={{ marginTop: 10, width: '100%' }}

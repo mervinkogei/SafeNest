@@ -71,7 +71,9 @@ export default function ParentHome() {
           <p className="muted">A calm place to understand what happened online and decide the next step.</p>
           <div className="actions">
             <a className="btn" href="/report"><Icon name="plus" size={18} /> {t.report}</a>
-            <a className="btn secondary" href="/learn"><Icon name="book" size={18} /> Safety guide</a>
+            <button className="btn secondary" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
+              <Icon name="spark" size={18} /> Ask SafeNest AI
+            </button>
           </div>
         </div>
         <div className="dash-art" aria-hidden>
@@ -138,6 +140,9 @@ export default function ParentHome() {
         <aside>
           <h2>Quick actions</h2>
           <a className="action-tile" href="/locker"><Icon name="folder" /> Evidence locker</a>
+          <button className="action-tile" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
+            <Icon name="spark" /> Ask SafeNest AI
+          </button>
           <a className="action-tile" href="/resources"><Icon name="phone" /> Trusted help lines</a>
           <a className="action-tile" href="/children"><Icon name="users" /> Child profiles</a>
           <a className="action-tile" href="/learn"><Icon name="book" /> Learn online safety</a>

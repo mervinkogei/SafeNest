@@ -75,37 +75,46 @@ export default function ChildrenPage() {
       <BackLink href="/parent" label="Dashboard" />
       <h1>Child profiles</h1>
       <p className="tiny muted">Only a display name, age range, and invite code. No school, location, or extra identity data.</p>
-      <div className="locker-grid">
-        {children.map((child) => (
-          <div className="card" key={child.id}>
-            <b>{child.displayName}</b>
-            <p className="tiny muted">Age range {child.ageRange}</p>
-            <p>Invite code <b>{child.inviteCode}</b></p>
-            <div className="dialog-actions" style={{ marginTop: 12 }}>
-              <button className="btn secondary" type="button" onClick={() => setPendingStartEdit(child)}>Edit</button>
-              <button className="btn danger" type="button" onClick={() => setPendingDelete(child)}>Delete</button>
-            </div>
+      <div className="children-layout">
+        <div>
+          <div className="locker-grid">
+            {children.map((child) => (
+              <div className="card" key={child.id}>
+                <b>{child.displayName}</b>
+                <p className="tiny muted">Age range {child.ageRange}</p>
+                <p>Invite code <b>{child.inviteCode}</b></p>
+                <div className="dialog-actions" style={{ marginTop: 12 }}>
+                  <button className="btn secondary" type="button" onClick={() => setPendingStartEdit(child)}>Edit</button>
+                  <button className="btn danger" type="button" onClick={() => setPendingDelete(child)}>Delete</button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+          {!children.length && (
+            <div className="empty-card">
+              <p>No child profiles yet. Add a display name in the form to create one.</p>
+            </div>
+          )}
+        </div>
+        <form onSubmit={onSubmit} className="form-card children-form">
+          <h3>{editing ? `Edit ${editing.displayName}` : 'Add child profile'}</h3>
+          <label className="field">Display name
+            <input name="displayName" required defaultValue={editing?.displayName || ''} key={editing?.id || 'new'} />
+          </label>
+          <label className="field">Age range
+            <select name="ageRange" defaultValue={editing?.ageRange || '13-15'} key={`${editing?.id || 'new'}-age`}>
+              <option>8-12</option>
+              <option>13-15</option>
+              <option>16-17</option>
+            </select>
+          </label>
+          {error && <div className="error">{error}</div>}
+          <button className="btn">{editing ? 'Save changes' : 'Add child profile'}</button>
+          {editing && (
+            <button className="btn ghost" type="button" onClick={() => setEditing(null)}>Cancel edit</button>
+          )}
+        </form>
       </div>
-      <form onSubmit={onSubmit} className="form-card" style={{ marginTop: 24 }}>
-        <h3>{editing ? `Edit ${editing.displayName}` : 'Add child profile'}</h3>
-        <label className="field">Display name
-          <input name="displayName" required defaultValue={editing?.displayName || ''} key={editing?.id || 'new'} />
-        </label>
-        <label className="field">Age range
-          <select name="ageRange" defaultValue={editing?.ageRange || '13-15'} key={`${editing?.id || 'new'}-age`}>
-            <option>8-12</option>
-            <option>13-15</option>
-            <option>16-17</option>
-          </select>
-        </label>
-        {error && <div className="error">{error}</div>}
-        <button className="btn">{editing ? 'Save changes' : 'Add child profile'}</button>
-        {editing && (
-          <button className="btn ghost" type="button" onClick={() => setEditing(null)}>Cancel edit</button>
-        )}
-      </form>
 
       <ConfirmDialog
         open={Boolean(pendingStartEdit)}

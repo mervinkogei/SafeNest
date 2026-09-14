@@ -11,6 +11,7 @@ import { User } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { AiService } from '../ai/ai.service';
 import { ChildrenService } from '../children/children.service';
+import { buildBriefing } from './briefing';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads');
 
@@ -22,6 +23,40 @@ export class IncidentsService {
     private children: ChildrenService,
   ) {
     mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+
+  private parseOccurredOn(value?: string) {
+    if (!value) return undefined;
+    const iso = value.slice(0, 10);
+    const date = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(date.getTime()) || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+      throw new BadRequestException('Enter a valid date.');
+    }
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (date > today) throw new BadRequestException('The date this happened cannot be in the future.');
+    return iso;
+  }
+
+  private withOccurredOn(text: string, occurredOn?: string) {
+    const iso = this.parseOccurredOn(occurredOn);
+    const body = (text || '').replace(/^Date it happened: \d{4}-\d{2}-\d{2}\n\n?/, '').trim();
+    if (!iso) return body;
+    return body ? `Date it happened: ${iso}\n\n${body}` : `Date it happened: ${iso}`;
+  }
+
+  private async resolveChild(guardian: User, childId?: string, childName?: string) {
+    if (childId) {
+      const child = await this.prisma.child.findFirst({ where: { id: childId, guardianId: guardian.id } });
+      if (!child) throw new BadRequestException('Pick a child from your family profiles.');
+      return child.id;
+    }
+    const name = (childName || '').trim();
+    if (!name) return undefined;
+    const children = await this.prisma.child.findMany({ where: { guardianId: guardian.id } });
+    const match = children.find((child) => child.displayName.toLowerCase() === name.toLowerCase());
+    if (!match) throw new BadRequestException('Pick a child from your family profiles. Add a new profile first if the name is not listed.');
+    return match.id;
   }
 
   private async assertAccess(user: User, incidentId: string) {
@@ -45,7 +80,7 @@ export class IncidentsService {
 
   async create(
     user: User,
-    body: { childId?: string; platform: string; description: string; category: string },
+    body: { childId?: string; childName?: string; platform: string; description?: string; category: string; occurredOn?: string },
   ) {
     let childId = body.childId;
     if (user.role === 'CHILD') {
@@ -53,7 +88,10 @@ export class IncidentsService {
       if (!linked) throw new BadRequestException('This account is not linked to a family profile yet.');
       childId = linked.id;
     }
-    if (!childId) throw new BadRequestException('Choose which child this incident is about.');
+    if (user.role === 'PARENT') {
+      childId = await this.resolveChild(user, body.childId, body.childName);
+    }
+    if (!childId) throw new BadRequestException('Pick which child this incident is about.');
 
     const child = await this.prisma.child.findUnique({ where: { id: childId } });
     if (!child) throw new NotFoundException('Child profile not found.');
@@ -64,7 +102,7 @@ export class IncidentsService {
         childId,
         reportedBy: user.id,
         platform: body.platform,
-        description: body.description,
+        description: this.withOccurredOn(body.description || '', body.occurredOn),
         category: body.category,
         status: 'OPEN',
       },
@@ -120,34 +158,50 @@ export class IncidentsService {
     };
   }
 
-  async addEvidence(user: User, id: string, file?: Express.Multer.File, note?: string, platform?: string) {
+  async addEvidence(
+    user: User,
+    id: string,
+    files: Express.Multer.File[] = [],
+    note?: string,
+    platform?: string,
+    occurredOn?: string,
+  ) {
     const incident = await this.assertAccess(user, id);
-    if (!file && !note) throw new BadRequestException('Upload a screenshot or write what happened.');
+    const uploads = (files || []).filter((file) => file?.buffer?.length);
+    if (!uploads.length && !note && !occurredOn && !platform) {
+      throw new BadRequestException('Add a description, a date, or upload a screenshot or file.');
+    }
 
-    if (note || platform) {
+    const happened = this.parseOccurredOn(occurredOn);
+    if (note || platform || happened) {
       await this.prisma.incident.update({
         where: { id: incident.id },
         data: {
-          description: note ? [incident.description, note].filter(Boolean).join('\n\n') : incident.description,
+          description: this.withOccurredOn(note ? [incident.description, note].filter(Boolean).join('\n\n') : incident.description, occurredOn),
           platform: platform || incident.platform,
         },
       });
     }
 
-    if (!file) return this.get(user, id);
-
-    const encrypted = this.encrypt(file.buffer);
-    const filename = `${id}-${Date.now()}.enc`;
-    writeFileSync(join(UPLOAD_DIR, filename), encrypted);
-
-    await this.prisma.evidence.create({
-      data: {
-        incidentId: id,
-        fileUrl: `/uploads/${filename}`,
-        fileType: file.mimetype || 'image/jpeg',
-      },
-    });
+    for (const file of uploads) {
+      const encrypted = this.encrypt(file.buffer);
+      const filename = `${id}-${Date.now()}-${randomBytes(3).toString('hex')}.enc`;
+      writeFileSync(join(UPLOAD_DIR, filename), encrypted);
+      await this.prisma.evidence.create({
+        data: {
+          incidentId: id,
+          fileUrl: `/uploads/${filename}`,
+          fileType: file.mimetype || 'application/octet-stream',
+        },
+      });
+    }
     return this.get(user, id);
+  }
+
+  async fileMeta(incidentId: string, filename: string) {
+    return this.prisma.evidence.findFirst({
+      where: { incidentId, fileUrl: { endsWith: filename } },
+    });
   }
 
   decryptFile(filename: string) {
@@ -209,6 +263,15 @@ export class IncidentsService {
     };
   }
 
+  async summary(user: User, id: string) {
+    let incident = await this.get(user, id);
+    if (!incident.assessment) {
+      await this.analyze(user, id);
+      incident = await this.get(user, id);
+    }
+    return buildBriefing(incident);
+  }
+
   async remove(user: User, id: string) {
     await this.assertAccess(user, id);
     await this.prisma.incident.delete({ where: { id } });
@@ -231,10 +294,10 @@ export class IncidentsService {
     };
   }
 
-  private uniqueResources(resources: { id: string; riskTypes: string; emergency: boolean }[], riskType?: string) {
+  private uniqueResources<T extends { id: string; riskTypes: string; emergency: boolean }>(resources: T[], riskType?: string) {
     const matched = resources.filter((item) => riskType && item.riskTypes.split(',').includes(riskType));
     const emergencies = resources.filter((item) => item.emergency);
-    const map = new Map();
+    const map = new Map<string, T>();
     [...emergencies, ...matched].forEach((item) => map.set(item.id, item));
     return [...map.values()].slice(0, 5);
   }

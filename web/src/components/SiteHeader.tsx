@@ -1,27 +1,53 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { currentUser, clearSession } from '@/lib/api';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { clearSession } from '@/lib/api';
 import { Icon } from '@/components/Icons';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
+function subscribeSession(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener('safenest-session', onStoreChange);
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener('safenest-session', onStoreChange);
+  };
+}
+
+function readUserJson() {
+  return localStorage.getItem('safenest_user');
+}
+
+const LINKS = [
+  { href: '/learn', label: 'Learn', icon: 'book' },
+  { href: '/#how-it-works', label: 'How it works', icon: 'shield' },
+  { href: '/report', label: 'Report', icon: 'plus' },
+  { href: '/locker', label: 'Locker', icon: 'folder' },
+  { href: '/resources', label: 'Help', icon: 'phone' },
+];
+
 export default function SiteHeader() {
-  const [user, setUser] = useState<{ name?: string; role?: string } | null>(null);
+  const pathname = usePathname();
+  const raw = useSyncExternalStore(subscribeSession, readUserJson, () => null);
+  const user = raw ? JSON.parse(raw) as { name?: string; role?: string } : null;
   const [lang, setLang] = useState('en');
   const [open, setOpen] = useState(false);
-  const [ready, setReady] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
-    setUser(currentUser());
     setLang(localStorage.getItem('safenest_lang') || 'en');
-    setReady(true);
     const closeMenuOnDesktop = () => {
       if (window.innerWidth > 900) setOpen(false);
     };
     window.addEventListener('resize', closeMenuOnDesktop);
     return () => window.removeEventListener('resize', closeMenuOnDesktop);
   }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   function toggleLang() {
     const next = lang === 'en' ? 'sw' : 'en';
@@ -35,55 +61,45 @@ export default function SiteHeader() {
     window.location.href = '/';
   }
 
-  const home = user?.role === 'CHILD' ? '/child' : user ? '/parent' : '/';
+  function openGuide() {
+    setOpen(false);
+    window.dispatchEvent(new Event('safenest-ai-open'));
+  }
 
-  const links = !ready ? [] : [
-    { href: '/learn', label: 'Learn', icon: 'book' },
-    ...(!user ? [{ href: '/#how-it-works', label: 'How it works', icon: 'shield' }] : []),
-    ...(user?.role === 'PARENT' ? [
-      { href: '/parent', label: 'Home', icon: 'home' },
-      { href: '/report', label: 'Report', icon: 'plus' },
-      { href: '/locker', label: 'Locker', icon: 'folder' },
-      { href: '/resources', label: 'Help', icon: 'phone' },
-    ] : []),
-    ...(user?.role === 'CHILD' ? [
-      { href: '/child', label: 'Home', icon: 'home' },
-      { href: '/resources', label: 'Help', icon: 'phone' },
-    ] : []),
-  ];
+  const home = user?.role === 'CHILD' ? '/child' : user ? '/parent' : '/';
 
   return (
     <>
       <header className="site-header">
         <div className="site-header-inner">
-          <a className="brand-link" href={home}>
+          <Link className="brand-link" href={home}>
             <span className="brand-mark" aria-hidden><Icon name="shield" size={16} /></span>
             <span className="brand">SafeNest</span>
-          </a>
-          <nav className={`site-nav desktop-nav ${ready ? 'is-ready' : ''}`} aria-busy={!ready}>
-            {links.map((link) => (
-              <a key={link.href} href={link.href} className="nav-link">
+          </Link>
+          <nav className="site-nav desktop-nav">
+            {LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="nav-link">
                 <Icon name={link.icon} size={16} />
                 {link.label}
-              </a>
+              </Link>
             ))}
-            {ready && (
+            <button className="nav-link" type="button" onClick={openGuide}>
+              <Icon name="spark" size={16} />
+              Ask AI
+            </button>
+            <button className="icon-chip" type="button" onClick={toggleLang} aria-label="Change language">
+              <Icon name="globe" size={16} />
+              <span>{lang === 'en' ? 'SW' : 'EN'}</span>
+            </button>
+            {user ? (
+              <button className="icon-chip" type="button" onClick={() => setLogoutOpen(true)}>
+                <Icon name="logout" size={16} />
+                <span>Sign out</span>
+              </button>
+            ) : (
               <>
-                <button className="icon-chip" type="button" onClick={toggleLang} aria-label="Change language">
-                  <Icon name="globe" size={16} />
-                  <span>{lang === 'en' ? 'SW' : 'EN'}</span>
-                </button>
-                {user ? (
-                  <button className="icon-chip" type="button" onClick={() => setLogoutOpen(true)}>
-                    <Icon name="logout" size={16} />
-                    <span>Sign out</span>
-                  </button>
-                ) : (
-                  <>
-                    <a className="nav-link" href="/login">Sign in</a>
-                    <a className="btn header-cta" href="/role">Get started</a>
-                  </>
-                )}
+                <Link className="nav-link" href="/login">Sign in</Link>
+                <Link className="btn header-cta" href="/role">Get started</Link>
               </>
             )}
           </nav>
@@ -98,12 +114,16 @@ export default function SiteHeader() {
           <button className="menu-backdrop" aria-label="Close menu" onClick={() => setOpen(false)} />
           <nav className="menu-sheet" aria-label="Menu">
             <div className="menu-grid">
-              {links.map((link) => (
-                <a key={link.href} href={link.href} className="menu-item" onClick={() => setOpen(false)}>
+              {LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className="menu-item" onClick={() => setOpen(false)}>
                   <Icon name={link.icon} size={18} />
                   <span>{link.label}</span>
-                </a>
+                </Link>
               ))}
+              <button className="menu-item" type="button" onClick={openGuide}>
+                <Icon name="spark" size={18} />
+                <span>Ask AI</span>
+              </button>
               <button className="menu-item" type="button" onClick={toggleLang}>
                 <Icon name="globe" size={18} />
                 <span>{lang === 'en' ? 'SW' : 'EN'}</span>
@@ -114,10 +134,10 @@ export default function SiteHeader() {
                   <span>Out</span>
                 </button>
               ) : (
-                <a className="menu-item" href="/login" onClick={() => setOpen(false)}>
+                <Link className="menu-item" href="/login" onClick={() => setOpen(false)}>
                   <Icon name="users" size={18} />
                   <span>Sign in</span>
-                </a>
+                </Link>
               )}
             </div>
           </nav>
@@ -126,10 +146,10 @@ export default function SiteHeader() {
 
       {user && (
         <nav className="mobile-tabs" aria-label="Primary">
-          <a href={home}><Icon name="home" size={20} /><span>Home</span></a>
-          <a href="/report"><Icon name="plus" size={20} /><span>{user.role === 'PARENT' ? 'Report' : 'Help'}</span></a>
-          <a href="/learn"><Icon name="book" size={20} /><span>Learn</span></a>
-          <a href="/resources"><Icon name="phone" size={20} /><span>Help</span></a>
+          <Link href={home}><Icon name="home" size={20} /><span>Home</span></Link>
+          <Link href="/report"><Icon name="plus" size={20} /><span>Report</span></Link>
+          <Link href="/learn"><Icon name="book" size={20} /><span>Learn</span></Link>
+          <button type="button" onClick={openGuide}><Icon name="spark" size={20} /><span>Ask AI</span></button>
         </nav>
       )}
 

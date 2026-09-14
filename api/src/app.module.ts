@@ -7,6 +7,7 @@ import { IncidentsModule } from './incidents/incidents.module';
 import { ResourcesModule } from './resources/resources.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthController } from './health.controller';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { HealthController } from './health.controller';
     IncidentsModule,
     ResourcesModule,
     NotificationsModule,
+    AiModule,
   ],
   controllers: [HealthController],
   providers: [PrismaService],

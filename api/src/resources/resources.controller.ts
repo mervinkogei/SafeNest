@@ -1,6 +1,5 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('resources')
 export class ResourcesController {
@@ -23,7 +22,6 @@ export class ResourcesController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   list(@Query('riskType') riskType?: string) {
     return this.prisma.resource.findMany({

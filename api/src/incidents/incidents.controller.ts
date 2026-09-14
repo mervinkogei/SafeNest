@@ -6,14 +6,14 @@ import {
   Param,
   Post,
   Res,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { Response } from 'express';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/current-user.decorator';
@@ -24,14 +24,24 @@ class CreateIncidentDto {
   @IsString()
   childId?: string;
 
+  @IsOptional()
+  @IsString()
+  childName?: string;
+
   @IsString()
   platform: string;
 
+  @IsOptional()
   @IsString()
-  description: string;
+  @MaxLength(4000)
+  description?: string;
 
   @IsString()
   category: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Use a valid date.' })
+  occurredOn?: string;
 }
 
 class EvidenceNoteDto {
@@ -42,6 +52,10 @@ class EvidenceNoteDto {
   @IsOptional()
   @IsString()
   platform?: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Use a valid date.' })
+  occurredOn?: string;
 }
 
 @Controller('incidents')
@@ -64,20 +78,25 @@ export class IncidentsController {
     return this.incidents.list(user);
   }
 
+  @Get(':id/summary')
+  summary(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.incidents.summary(user, id);
+  }
+
   @Get(':id')
   get(@CurrentUser() user: User, @Param('id') id: string) {
     return this.incidents.get(user, id);
   }
 
   @Post(':id/evidence')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 4 * 1024 * 1024 } }))
+  @UseInterceptors(AnyFilesInterceptor({ storage: memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } }))
   addEvidence(
     @CurrentUser() user: User,
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() dto: EvidenceNoteDto,
   ) {
-    return this.incidents.addEvidence(user, id, file, dto.note, (dto as { platform?: string }).platform);
+    return this.incidents.addEvidence(user, id, files || [], dto.note, dto.platform, dto.occurredOn);
   }
 
   @Get(':id/evidence/:filename')
@@ -89,7 +108,9 @@ export class IncidentsController {
   ) {
     await this.incidents.get(user, id);
     const buffer = this.incidents.decryptFile(filename);
-    res.setHeader('Content-Type', 'image/jpeg');
+    const evidence = await this.incidents.fileMeta(id, filename);
+    res.setHeader('Content-Type', evidence?.fileType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${filename.replace('.enc', '')}"`);
     res.send(buffer);
   }
 

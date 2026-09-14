@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { api, currentUser } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import { Icon, riskIcon } from '@/components/Icons';
 
@@ -15,6 +15,10 @@ export default function LockerIndex() {
     severity?: string;
   }>>([]);
   useEffect(() => {
+    if (!currentUser()) {
+      window.location.href = '/login';
+      return;
+    }
     api('/incidents').then(setIncidents);
   }, []);
 

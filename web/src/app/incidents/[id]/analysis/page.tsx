@@ -64,7 +64,18 @@ export default function AnalysisPage() {
         ))}
       </section>
       <a className="btn" href={`/incidents/${id}/plan`}>What should I do?</a>
-      <a className="btn secondary" href={`/incidents/${id}/locker`}>Preserve evidence</a>
+      <a className="btn secondary" href={`/incidents/${id}/locker`}>Generate shareable briefing</a>
+      <a className="btn ghost" href={`/incidents/${id}/locker`}>Preserve evidence</a>
+      <button
+        className="btn ghost"
+        type="button"
+        style={{ marginTop: 12 }}
+        onClick={() => window.dispatchEvent(new CustomEvent('safenest-ai-open', {
+          detail: { prompt: `Help me understand this assessment: ${a.riskType.replaceAll('_', ' ')}, severity ${a.severity}. ${a.explanation}` },
+        }))}
+      >
+        Ask SafeNest AI about this
+      </button>
     </main>
   );
 }
