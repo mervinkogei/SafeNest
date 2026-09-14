@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nestjs",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "rewrites": [
+    { "source": "/", "destination": "/api/health" }
+  ],
+  "functions": {
+    "src/main.ts": {
+      "maxDuration": 30,
+      "includeFiles": "prisma/**"
+    }
+  }
+}

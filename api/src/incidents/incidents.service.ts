@@ -12,8 +12,7 @@ import { PrismaService } from '../prisma.service';
 import { AiService } from '../ai/ai.service';
 import { ChildrenService } from '../children/children.service';
 import { buildBriefing } from './briefing';
-
-const UPLOAD_DIR = join(process.cwd(), 'uploads');
+import { uploadDir } from '../runtime';
 
 @Injectable()
 export class IncidentsService {
@@ -22,7 +21,7 @@ export class IncidentsService {
     private ai: AiService,
     private children: ChildrenService,
   ) {
-    mkdirSync(UPLOAD_DIR, { recursive: true });
+    mkdirSync(uploadDir(), { recursive: true });
   }
 
   private parseOccurredOn(value?: string) {
@@ -186,7 +185,7 @@ export class IncidentsService {
     for (const file of uploads) {
       const encrypted = this.encrypt(file.buffer);
       const filename = `${id}-${Date.now()}-${randomBytes(3).toString('hex')}.enc`;
-      writeFileSync(join(UPLOAD_DIR, filename), encrypted);
+      writeFileSync(join(uploadDir(), filename), encrypted);
       await this.prisma.evidence.create({
         data: {
           incidentId: id,
@@ -205,7 +204,7 @@ export class IncidentsService {
   }
 
   decryptFile(filename: string) {
-    const buf = readFileSync(join(UPLOAD_DIR, filename));
+    const buf = readFileSync(join(uploadDir(), filename));
     return this.decrypt(buf);
   }
 
