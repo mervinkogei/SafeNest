@@ -1,16 +1,17 @@
 import './globals.css';
 import { ReactNode } from 'react';
+import SiteHeader from '@/components/SiteHeader';
 
 export const metadata = {
   title: 'SafeNest',
-  description: 'Protect. Understand. Act. A safer way to navigate difficult online situations.',
+  description: 'Protect. Understand. Act. Learn about online safety, then record an incident with a trusted adult.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -19,9 +20,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <div className="stage">
-          <div className="phone">{children}</div>
-        </div>
+        <SiteHeader />
+        {children}
       </body>
     </html>
   );

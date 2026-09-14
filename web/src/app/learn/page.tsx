@@ -1,20 +1,83 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { currentUser } from '@/lib/api';
+import { education, Lang } from '@/lib/i18n';
+
 export default function LearnPage() {
+  const [lang, setLang] = useState<Lang>('en');
+  const user = typeof window !== 'undefined' ? currentUser() : null;
+  const e = education[lang];
+
+  useEffect(() => {
+    const sync = () => setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
+    sync();
+    window.addEventListener('safenest-lang', sync);
+    return () => window.removeEventListener('safenest-lang', sync);
+  }, []);
+
+  const back = user?.role === 'CHILD' ? '/child' : user ? '/parent' : '/';
+
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/child">← Back</a>
-      <h1>You can ask for help</h1>
-      <div className="card">
-        <b>If a message feels bad, you can tell someone.</b>
-        <p>You do not have to answer. You do not have to keep it a secret. A trusted adult can help without blaming you.</p>
-      </div>
-      <div className="card">
-        <b>SafeNest will not take your accounts.</b>
-        <p>Nobody here will ask for your WhatsApp, TikTok, or Instagram password.</p>
-      </div>
-      <div className="card">
-        <b>Need to talk to a person now?</b>
-        <p>In Kenya you can call <b>116</b> for Childline, free. If you are in danger, call <b>999</b>.</p>
-      </div>
+    <main className="page">
+      <a className="tiny muted" href={back}>← Back</a>
+      <div className="kicker">Safety guide</div>
+      <h1>Learn before you record an incident</h1>
+      <p className="muted" style={{ maxWidth: 720, fontSize: '1.1rem' }}>
+        This guide is public. You do not need an account to read it. An account is only for keeping evidence and asking a trusted adult for help.
+      </p>
+
+      <section className="section">
+        <h2>{e.youngTitle}</h2>
+        <div className="grid-2">
+          {e.young.map((item) => (
+            <article className="edu-card" key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>{e.adultTitle}</h2>
+        <div className="grid-2">
+          {e.adult.map((item) => (
+            <article className="edu-card" key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>{e.signsTitle}</h2>
+        <div className="grid-2">
+          {e.signs.map((item) => (
+            <article className="edu-card" key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>{e.evidenceTitle}</h2>
+        <ol className="steps">
+          {e.evidence.map((step) => <li key={step}>{step}</li>)}
+        </ol>
+      </section>
+
+      <section className="section card">
+        <h2>{e.urgentTitle}</h2>
+        <p>In Kenya you can call <b>116</b> (Childline, free, 24 hours). If you are in danger, call <b>999</b> or <b>112</b>. For sexual or gender-based harm, call <b>1195</b>.</p>
+        <div className="actions">
+          <a className="btn" href="/role">I am ready to record an incident</a>
+          <a className="btn secondary" href="/">Back to home</a>
+        </div>
+      </section>
     </main>
   );
 }

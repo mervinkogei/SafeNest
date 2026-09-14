@@ -37,11 +37,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/role">← Back</a>
-      <h1>Create your SafeNest</h1>
-      <p className="muted tiny">We only ask for a name and email. Children never share social-media passwords.</p>
-      <form onSubmit={onSubmit} className="grow" style={{ display: 'grid', gap: 12 }}>
+    <main className="page">
+      <div className="form-card">
+        <a className="tiny muted" href="/role">← Back</a>
+        <h1>Create your SafeNest</h1>
+        <p className="muted tiny">We only ask for a name and email. Children never share social-media passwords.</p>
+        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
         <label className="field">Name
           <input name="name" required placeholder={role === 'CHILD' ? 'A name you like' : 'Your name'} />
         </label>
@@ -59,6 +60,7 @@ export default function RegisterPage() {
         {error && <div className="error">{error}</div>}
         <button className="btn" disabled={loading}>{loading ? 'Saving…' : 'Continue'}</button>
       </form>
+      </div>
     </main>
   );
 }

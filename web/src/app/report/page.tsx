@@ -41,7 +41,8 @@ export default function ReportPage() {
   }
 
   return (
-    <main className="screen">
+    <main className="page">
+      <div className="form-card" style={{ width: 'min(640px, 100%)' }}>
       <a className="tiny muted" href={currentUser()?.role === 'CHILD' ? '/child' : '/parent'}>← Back</a>
       <h1>What happened?</h1>
       <form onSubmit={onSubmit} style={{ display: 'grid', gap: 10 }}>
@@ -63,6 +64,7 @@ export default function ReportPage() {
         {error && <div className="error">{error}</div>}
         <button className="btn">Continue</button>
       </form>
+      </div>
     </main>
   );
 }

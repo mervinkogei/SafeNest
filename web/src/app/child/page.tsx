@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api, clearSession, currentUser } from '@/lib/api';
+import { api, currentUser } from '@/lib/api';
 import { copy, Lang } from '@/lib/i18n';
 
 export default function ChildHome() {
@@ -30,12 +30,10 @@ export default function ChildHome() {
   }
 
   return (
-    <main className="screen">
-      <div className="topbar">
-        <h2 style={{ margin: 0 }}>Hi {user?.name || ''} 👋</h2>
-        <button className="lang" onClick={() => { clearSession(); window.location.href = '/'; }}>Sign out</button>
-      </div>
+    <main className="page">
+      <h2 style={{ margin: 0 }}>Hi {user?.name || ''} 👋</h2>
       <p>{t.okayOnline}</p>
+      <div className="grid-2" style={{ marginTop: 16 }}>
       <button className="choice" onClick={() => start('unsure')}>
         <b>{t.askHelp}</b>
         <span className="tiny muted">You will not get in trouble for telling us.</span>
@@ -48,6 +46,7 @@ export default function ChildHome() {
         <b>{t.learn}</b>
         <span className="tiny muted">Short, kind guidance. No scary language.</span>
       </a>
+      </div>
     </main>
   );
 }

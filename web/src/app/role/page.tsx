@@ -16,17 +16,22 @@ export default function RolePage() {
   }
 
   return (
-    <main className="screen">
-      <a className="tiny muted" href="/">← Back</a>
-      <h1>{t.chooseRole}</h1>
-      <button className="choice" onClick={() => choose('PARENT')}>
-        <b>👨‍👩‍👧 {t.parent}</b>
-        <span className="tiny muted">{t.parentHint}</span>
-      </button>
-      <button className="choice" onClick={() => choose('CHILD')}>
-        <b>🧒 {t.child}</b>
-        <span className="tiny muted">{t.childHint}</span>
-      </button>
+    <main className="page">
+      <div className="form-card">
+        <a className="tiny muted" href="/learn">← Read the guide first</a>
+        <h1>{t.chooseRole}</h1>
+        <p className="tiny muted">You can still go back and learn. Recording an incident comes after you understand what help looks like.</p>
+        <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+          <button className="choice" onClick={() => choose('PARENT')}>
+            <b>👨‍👩‍👧 {t.parent}</b>
+            <span className="tiny muted">{t.parentHint}</span>
+          </button>
+          <button className="choice" onClick={() => choose('CHILD')}>
+            <b>🧒 {t.child}</b>
+            <span className="tiny muted">{t.childHint}</span>
+          </button>
+        </div>
+      </div>
     </main>
   );
 }
