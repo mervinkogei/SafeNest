@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import PasswordField from '@/components/PasswordField';
+import { useLang } from '@/lib/language';
 
 export default function ForgotPasswordPage() {
+  const { t } = useLang();
   const [step, setStep] = useState<'email' | 'reset'>('email');
   const [email, setEmail] = useState('');
   const [demoCode, setDemoCode] = useState('');
@@ -29,7 +31,7 @@ export default function ForgotPasswordPage() {
       setDemoCode(data.demoCode || '');
       setStep('reset');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not start a reset');
+      setError(err instanceof Error ? err.message : t.auth.resetFail);
     } finally {
       setLoading(false);
     }
@@ -49,9 +51,9 @@ export default function ForgotPasswordPage() {
           password: form.get('password'),
         }),
       });
-      setDone(data.message || 'Password updated. You can sign in now.');
+      setDone(data.message || t.auth.updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update password');
+      setError(err instanceof Error ? err.message : t.auth.updateFail);
     } finally {
       setLoading(false);
     }
@@ -60,43 +62,43 @@ export default function ForgotPasswordPage() {
   return (
     <main className="page">
       <div className="form-card">
-        <BackLink href="/login" label="Sign in" />
-        <h1>Forgot password</h1>
+        <BackLink href="/login" label={t.auth.signIn} />
+        <h1>{t.auth.forgotTitle}</h1>
         {done ? (
           <>
             <p className="muted">{done}</p>
-            <Link className="btn" href="/login">Back to sign in</Link>
+            <Link className="btn" href="/login">{t.auth.backSignIn}</Link>
           </>
         ) : step === 'email' ? (
           <>
-            <p className="muted tiny">Enter the email on your SafeNest account. We will give you a short code to set a new password.</p>
+            <p className="muted tiny">{t.auth.forgotHint}</p>
             <form onSubmit={requestCode} style={{ display: 'grid', gap: 12 }}>
-              <label className="field">Email
+              <label className="field">{t.common.email}
                 <input name="email" type="email" required autoComplete="email" />
               </label>
               {error && <div className="error">{error}</div>}
-              <button className="btn" disabled={loading}>{loading ? 'Checking…' : 'Send reset code'}</button>
+              <button className="btn" disabled={loading}>{loading ? t.auth.checking : t.auth.sendCode}</button>
             </form>
           </>
         ) : (
           <>
-            <p className="muted tiny">Enter the 6-digit code and choose a new password.</p>
+            <p className="muted tiny">{t.auth.enterCode}</p>
             {demoCode && (
-              <p className="notice-inline">Demo reset code for {email}: <b>{demoCode}</b></p>
+              <p className="notice-inline">{t.auth.demoCode} {email}: <b>{demoCode}</b></p>
             )}
             <form onSubmit={resetPassword} style={{ display: 'grid', gap: 12 }}>
-              <label className="field">Reset code
-                <input name="code" inputMode="numeric" required minLength={4} placeholder="6-digit code" />
+              <label className="field">{t.auth.resetCode}
+                <input name="code" inputMode="numeric" required minLength={4} placeholder={t.auth.codePlaceholder} />
               </label>
-              <PasswordField name="password" required minLength={8} placeholder="At least 8 characters" autoComplete="new-password" />
+              <PasswordField name="password" required minLength={8} placeholder={t.auth.passwordHint} autoComplete="new-password" />
               {error && <div className="error">{error}</div>}
-              <button className="btn" disabled={loading}>{loading ? 'Saving…' : 'Update password'}</button>
+              <button className="btn" disabled={loading}>{loading ? t.auth.saving : t.auth.updatePassword}</button>
             </form>
           </>
         )}
         <p className="auth-links">
-          <Link href="/login">Remembered it? Sign in</Link>
-          <Link href="/role">Create an account</Link>
+          <Link href="/login">{t.auth.remembered}</Link>
+          <Link href="/role">{t.auth.createAccount}</Link>
         </p>
       </div>
     </main>

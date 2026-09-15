@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api, currentUser } from '@/lib/api';
-import { copy, Lang } from '@/lib/i18n';
+import { useLang } from '@/lib/language';
 import { Icon, riskIcon } from '@/components/Icons';
 
 type Dash = {
@@ -20,46 +20,44 @@ type Dash = {
   }>;
 };
 
-function hello() {
+function hello(t: ReturnType<typeof useLang>['t']) {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return t.parent.morning;
+  if (hour < 17) return t.parent.afternoon;
+  return t.parent.evening;
 }
 
 export default function ParentHome() {
+  const { t } = useLang();
   const [data, setData] = useState<Dash | null>(null);
   const [notes, setNotes] = useState<Array<{ id: string; title: string; body: string }>>([]);
   const [user, setUser] = useState<{ name?: string } | null>(null);
   const [greeting, setGreeting] = useState('');
-  const [lang, setLang] = useState<Lang>('en');
-  const t = copy[lang];
 
   useEffect(() => {
-    setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
     const account = currentUser();
     if (!account) {
       window.location.href = '/login';
       return;
     }
     setUser(account);
-    setGreeting(hello());
+    setGreeting(hello(t));
     api('/incidents/dashboard').then(setData).catch(() => setData({ open: 0, needsAttention: 0, recent: [] }));
     api('/notifications').then(setNotes).catch(() => setNotes([]));
-  }, []);
+  }, [t]);
 
   if (!user) {
     return (
       <main className="page">
-        <p className="muted">Loading your dashboard…</p>
+        <p className="muted">{t.parent.loading}</p>
       </main>
     );
   }
 
   const stats = [
-    { label: 'Open', value: data?.open ?? 0, icon: 'inbox', tone: 'teal' },
-    { label: 'Needs attention', value: data?.needsAttention ?? 0, icon: 'alert', tone: 'clay' },
-    { label: 'Resolved', value: data?.resolved ?? 0, icon: 'shield', tone: 'ok' },
+    { label: t.parent.open, value: data?.open ?? 0, icon: 'inbox', tone: 'teal' },
+    { label: t.parent.needsAttention, value: data?.needsAttention ?? 0, icon: 'alert', tone: 'clay' },
+    { label: t.parent.resolved, value: data?.resolved ?? 0, icon: 'shield', tone: 'ok' },
   ];
 
   return (
@@ -67,12 +65,12 @@ export default function ParentHome() {
       <section className="dash-hero">
         <div className="dash-hero-copy">
           <p className="kicker">{greeting}</p>
-          <h1>{user.name || 'Caregiver'}</h1>
-          <p className="muted">A calm place to understand what happened online and decide the next step.</p>
+          <h1>{user.name || t.parent.caregiver}</h1>
+          <p className="muted">{t.parent.intro}</p>
           <div className="actions">
-            <a className="btn" href="/report"><Icon name="plus" size={18} /> {t.report}</a>
+            <a className="btn" href="/report"><Icon name="plus" size={18} /> {t.copy.report}</a>
             <button className="btn secondary" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
-              <Icon name="spark" size={18} /> Ask SafeNest AI
+              <Icon name="spark" size={18} /> {t.home.askAi}
             </button>
           </div>
         </div>
@@ -109,8 +107,8 @@ export default function ParentHome() {
       <section className="dash-split">
         <div>
           <div className="section-head">
-            <h2>Recent incidents</h2>
-            <a className="tiny" href="/locker">Open locker</a>
+            <h2>{t.parent.recent}</h2>
+            <a className="tiny" href="/locker">{t.parent.openLocker}</a>
           </div>
           {(data?.recent || []).map((item) => (
             <article className="incident-card" key={item.id}>
@@ -125,27 +123,27 @@ export default function ParentHome() {
                 <span className={`badge ${item.severity || 'medium'}`}>{item.severity || item.status}</span>
               </div>
               <a className="btn secondary view-btn" href={`/incidents/${item.id}/analysis`}>
-                <Icon name="eye" size={16} /> View incident
+                <Icon name="eye" size={16} /> {t.parent.viewIncident}
               </a>
             </article>
           ))}
           {!data?.recent?.length && (
             <div className="empty-card">
               <Icon name="inbox" size={32} />
-              <p>No incidents yet. When something happens, record it here.</p>
-              <a className="btn" href="/report">Report an incident</a>
+              <p>{t.parent.empty}</p>
+              <a className="btn" href="/report">{t.parent.report}</a>
             </div>
           )}
         </div>
         <aside>
-          <h2>Quick actions</h2>
-          <a className="action-tile" href="/locker"><Icon name="folder" /> Evidence locker</a>
+          <h2>{t.parent.quick}</h2>
+          <a className="action-tile" href="/locker"><Icon name="folder" /> {t.parent.locker}</a>
           <button className="action-tile" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
-            <Icon name="spark" /> Ask SafeNest AI
+            <Icon name="spark" /> {t.home.askAi}
           </button>
-          <a className="action-tile" href="/resources"><Icon name="phone" /> Trusted help lines</a>
-          <a className="action-tile" href="/children"><Icon name="users" /> Child profiles</a>
-          <a className="action-tile" href="/learn"><Icon name="book" /> Learn online safety</a>
+          <a className="action-tile" href="/resources"><Icon name="phone" /> {t.parent.helpLines}</a>
+          <a className="action-tile" href="/children"><Icon name="users" /> {t.parent.profiles}</a>
+          <a className="action-tile" href="/learn"><Icon name="book" /> {t.parent.learn}</a>
         </aside>
       </section>
     </main>

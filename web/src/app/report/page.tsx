@@ -5,15 +5,7 @@ import Link from 'next/link';
 import { api, currentUser } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import { Icon } from '@/components/Icons';
-
-const OPTIONS = [
-  { id: 'bullying', label: 'Someone is bullying me' },
-  { id: 'threatened', label: 'Someone threatened me' },
-  { id: 'uncomfortable', label: 'Someone made me uncomfortable' },
-  { id: 'private', label: 'Someone asked for something private' },
-  { id: 'unsure', label: "I'm not sure" },
-  { id: 'other', label: 'Other' },
-];
+import { useLang } from '@/lib/language';
 
 function todayIso() {
   const now = new Date();
@@ -22,6 +14,7 @@ function todayIso() {
 }
 
 export default function ReportPage() {
+  const { t } = useLang();
   const [children, setChildren] = useState<Array<{ id: string; displayName: string }>>([]);
   const [childId, setChildId] = useState('');
   const [role, setRole] = useState<string>('');
@@ -52,13 +45,13 @@ export default function ReportPage() {
     event.preventDefault();
     setError('');
     if (occurredOn > maxDate) {
-      setError('The date this happened cannot be in the future.');
+      setError(t.report.futureDate);
       return;
     }
     const form = new FormData(event.currentTarget);
     const description = String(form.get('description') || '').trim();
     if (!description && files.length === 0) {
-      setError('Add a short description or upload a screenshot / file.');
+      setError(t.report.needDesc);
       return;
     }
     setLoading(true);
@@ -83,7 +76,7 @@ export default function ReportPage() {
       await api(`/incidents/${incident.id}/analyze`, { method: 'POST' });
       window.location.href = `/incidents/${incident.id}/analysis`;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save this incident');
+      setError(err instanceof Error ? err.message : t.report.fail);
     } finally {
       setLoading(false);
     }
@@ -92,17 +85,17 @@ export default function ReportPage() {
   return (
     <main className="page">
       <div className="report-sheet">
-        <BackLink href={role === 'CHILD' ? '/child' : '/parent'} label="Dashboard" />
-        <p className="kicker">Record an incident</p>
-        <h1>What happened?</h1>
-        <p className="muted">Pick the child’s name, tell us what you saw, and add screenshots or other files if you have them. SafeNest never asks for account passwords.</p>
+        <BackLink href={role === 'CHILD' ? '/child' : '/parent'} label={t.common.dashboard} />
+        <p className="kicker">{t.report.kicker}</p>
+        <h1>{t.report.title}</h1>
+        <p className="muted">{t.report.intro}</p>
 
         <form onSubmit={onSubmit} className="report-form">
           {role === 'PARENT' && (
             <section className="report-block">
-              <h3>Who is this about?</h3>
+              <h3>{t.report.who}</h3>
               {children.length ? (
-                <label className="field">Child’s name
+                <label className="field">{t.report.childName}
                   <select name="childId" required value={childId} onChange={(event) => setChildId(event.target.value)}>
                     {children.map((child) => (
                       <option key={child.id} value={child.id}>{child.displayName}</option>
@@ -111,36 +104,36 @@ export default function ReportPage() {
                 </label>
               ) : (
                 <div className="error">
-                  Add a child profile first, then come back to report.{' '}
-                  <Link href="/children">Open child profiles</Link>
+                  {t.report.addChildFirst}{' '}
+                  <Link href="/children">{t.report.openProfiles}</Link>
                 </div>
               )}
             </section>
           )}
 
           <section className="report-block">
-            <h3>What kind of harm?</h3>
+            <h3>{t.report.kind}</h3>
             <div className="option-grid">
-              {OPTIONS.map((option) => (
-                <label className="option" key={option.id}>
-                  <input type="radio" name="category" value={option.id} required />
-                  <span>{option.label}</span>
+              {(Object.entries(t.report.categories) as Array<[string, string]>).map(([id, label]) => (
+                <label className="option" key={id}>
+                  <input type="radio" name="category" value={id} required />
+                  <span>{label}</span>
                 </label>
               ))}
             </div>
           </section>
 
           <section className="report-block">
-            <h3>Details</h3>
-            <label className="field">Describe what happened
+            <h3>{t.report.details}</h3>
+            <label className="field">{t.report.describe}
               <textarea
                 name="description"
                 rows={5}
-                placeholder="They keep calling me names in the class WhatsApp group and told everyone to laugh at me."
+                placeholder={t.report.placeholder}
               />
             </label>
             <div className="report-two">
-              <label className="field">Platform
+              <label className="field">{t.report.platform}
                 <select name="platform" defaultValue="WhatsApp">
                   <option>WhatsApp</option>
                   <option>TikTok</option>
@@ -148,11 +141,11 @@ export default function ReportPage() {
                   <option>Facebook</option>
                   <option>SMS</option>
                   <option>Email</option>
-                  <option>School portal</option>
-                  <option>Other</option>
+                  <option>{t.report.schoolPortal}</option>
+                  <option>{t.report.other}</option>
                 </select>
               </label>
-              <label className="field">Date it happened
+              <label className="field">{t.report.date}
                 <input
                   type="date"
                   name="occurredOn"
@@ -162,7 +155,7 @@ export default function ReportPage() {
                   onChange={(event) => {
                     const next = event.target.value;
                     if (next > maxDate) {
-                      setError('The date this happened cannot be in the future.');
+                      setError(t.report.futureDate);
                       setOccurredOn(maxDate);
                       return;
                     }
@@ -175,11 +168,11 @@ export default function ReportPage() {
           </section>
 
           <section className="report-block">
-            <h3>Screenshots and other files</h3>
-            <p className="tiny muted">You can add images, PDFs, or short recordings. Up to 6 files, 8 MB each.</p>
+            <h3>{t.report.files}</h3>
+            <p className="tiny muted">{t.report.filesHint}</p>
             <label className="upload-drop">
               <Icon name="folder" size={28} />
-              <span>Upload screenshots or other resources</span>
+              <span>{t.report.upload}</span>
               <input
                 type="file"
                 multiple
@@ -198,7 +191,7 @@ export default function ReportPage() {
 
           {error && <div className="error">{error}</div>}
           <button className="btn" disabled={loading || (role === 'PARENT' && !childId)}>
-            {loading ? 'Saving and analysing…' : 'Save and analyse safely'}
+            {loading ? t.report.saving : t.report.save}
           </button>
         </form>
       </div>

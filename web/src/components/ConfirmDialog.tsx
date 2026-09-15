@@ -1,11 +1,13 @@
 'use client';
 
+import { useLang } from '@/lib/language';
+
 export default function ConfirmDialog({
   open,
   title,
   body,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   danger = false,
   onConfirm,
   onCancel,
@@ -19,6 +21,7 @@ export default function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useLang();
   if (!open) return null;
   const titleId = `dialog-${title.replace(/[^a-z0-9]+/gi, '-').slice(0, 32)}`;
   return (
@@ -27,8 +30,8 @@ export default function ConfirmDialog({
         <h3 id={titleId}>{title}</h3>
         <p className="muted">{body}</p>
         <div className="dialog-actions">
-          <button className="btn secondary" type="button" onClick={onCancel}>{cancelLabel}</button>
-          <button className={`btn ${danger ? 'danger' : ''}`} type="button" onClick={onConfirm}>{confirmLabel}</button>
+          <button className="btn secondary" type="button" onClick={onCancel}>{cancelLabel || t.common.cancel}</button>
+          <button className={`btn ${danger ? 'danger' : ''}`} type="button" onClick={onConfirm}>{confirmLabel || t.common.confirm}</button>
         </div>
       </div>
     </div>

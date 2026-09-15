@@ -4,29 +4,32 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { API_BASE } from '@/lib/api';
 import { Icon } from '@/components/Icons';
+import { useLang } from '@/lib/language';
 
 type ChatMsg = { role: 'user' | 'guide'; text: string; urgent?: boolean; actions?: Array<{ label: string; href: string }> };
 
-const STARTERS = [
-  'Someone is bullying my child in a group chat',
-  'A stranger asked for a private photo',
-  'How do I save evidence calmly?',
-];
-
 export default function AiGuide() {
+  const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState<ChatMsg[]>([{
-    role: 'guide',
-    text: 'I am SafeNest Guide, an AI helper — not a human counsellor. Ask what happened online, how to keep evidence, or which Kenyan number to call. If someone is in danger now, call 999 or 112.',
-    actions: [
-      { label: 'Learn', href: '/learn' },
-      { label: 'Report', href: '/report' },
-      { label: 'Help lines', href: '/resources' },
-    ],
-  }]);
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   const scroller = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMessages((current) => {
+      if (current.length > 1) return current;
+      return [{
+        role: 'guide',
+        text: t.ai.welcome,
+        actions: [
+          { label: t.ai.learn, href: '/learn' },
+          { label: t.ai.report, href: '/report' },
+          { label: t.ai.help, href: '/resources' },
+        ],
+      }];
+    });
+  }, [lang, t]);
 
   useEffect(() => {
     const openChat = (event: Event) => {
@@ -57,14 +60,14 @@ export default function AiGuide() {
       const data = await res.json();
       setMessages((current) => [...current, {
         role: 'guide',
-        text: data.reply || 'I could not answer just now. Try again, or call 116.',
+        text: data.reply || t.ai.fallback,
         urgent: data.urgent,
         actions: data.actions,
       }]);
     } catch {
       setMessages((current) => [...current, {
         role: 'guide',
-        text: 'The guide is offline for a moment. If this is urgent, call 999, 112, or Childline 116.',
+        text: t.ai.offline,
         urgent: true,
       }]);
     } finally {
@@ -82,17 +85,17 @@ export default function AiGuide() {
       {!open && (
         <button className="ai-fab" type="button" onClick={() => setOpen(true)}>
           <Icon name="spark" size={22} />
-          <span>Ask SafeNest AI</span>
+          <span>{t.ai.fab}</span>
         </button>
       )}
       {open && (
-        <section className="ai-panel" aria-label="SafeNest AI guide">
+        <section className="ai-panel" aria-label={t.ai.title}>
           <header className="ai-panel-head">
             <div>
-              <b>SafeNest Guide</b>
-              <p className="tiny">Live AI help · not a human operator</p>
+              <b>{t.ai.title}</b>
+              <p className="tiny">{t.ai.subtitle}</p>
             </div>
-            <button className="icon-chip" type="button" aria-label="Close guide" onClick={() => setOpen(false)}>
+            <button className="icon-chip" type="button" aria-label={t.ai.close} onClick={() => setOpen(false)}>
               <Icon name="close" size={16} />
             </button>
           </header>
@@ -111,10 +114,10 @@ export default function AiGuide() {
                 )}
               </div>
             ))}
-            {busy && <div className="ai-bubble guide typing">SafeNest is thinking…</div>}
+            {busy && <div className="ai-bubble guide typing">{t.ai.thinking}</div>}
           </div>
           <div className="ai-starters">
-            {STARTERS.map((item) => (
+            {t.ai.starters.map((item) => (
               <button key={item} type="button" onClick={() => send(item)}>{item}</button>
             ))}
           </div>
@@ -122,10 +125,10 @@ export default function AiGuide() {
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask or paste what happened…"
-              aria-label="Message SafeNest AI"
+              placeholder={t.ai.placeholder}
+              aria-label={t.ai.fab}
             />
-            <button className="btn" type="submit" disabled={busy || !input.trim()} aria-label="Send">
+            <button className="btn" type="submit" disabled={busy || !input.trim()} aria-label={t.ai.send}>
               <Icon name="send" size={16} />
             </button>
           </form>

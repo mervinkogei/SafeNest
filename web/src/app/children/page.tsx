@@ -4,10 +4,12 @@ import { FormEvent, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { useLang } from '@/lib/language';
 
 type Child = { id: string; displayName: string; ageRange: string; inviteCode: string };
 
 export default function ChildrenPage() {
+  const { t } = useLang();
   const [children, setChildren] = useState<Child[]>([]);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<Child | null>(null);
@@ -37,7 +39,7 @@ export default function ChildrenPage() {
       (event.target as HTMLFormElement).reset();
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add profile');
+      setError(err instanceof Error ? err.message : t.children.addFail);
     }
   }
 
@@ -52,7 +54,7 @@ export default function ChildrenPage() {
       setPendingEdit(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save profile');
+      setError(err instanceof Error ? err.message : t.children.saveFail);
       setPendingEdit(null);
     }
   }
@@ -65,43 +67,43 @@ export default function ChildrenPage() {
       setPendingDelete(null);
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete profile');
+      setError(err instanceof Error ? err.message : t.children.deleteFail);
       setPendingDelete(null);
     }
   }
 
   return (
     <main className="page">
-      <BackLink href="/parent" label="Dashboard" />
-      <h1>Child profiles</h1>
-      <p className="tiny muted">Only a display name, age range, and invite code. No school, location, or extra identity data.</p>
+      <BackLink href="/parent" label={t.common.dashboard} />
+      <h1>{t.children.title}</h1>
+      <p className="tiny muted">{t.children.intro}</p>
       <div className="children-layout">
         <div>
           <div className="locker-grid">
             {children.map((child) => (
               <div className="card" key={child.id}>
                 <b>{child.displayName}</b>
-                <p className="tiny muted">Age range {child.ageRange}</p>
-                <p>Invite code <b>{child.inviteCode}</b></p>
+                <p className="tiny muted">{t.children.ageRange} {child.ageRange}</p>
+                <p>{t.children.invite} <b>{child.inviteCode}</b></p>
                 <div className="dialog-actions" style={{ marginTop: 12 }}>
-                  <button className="btn secondary" type="button" onClick={() => setPendingStartEdit(child)}>Edit</button>
-                  <button className="btn danger" type="button" onClick={() => setPendingDelete(child)}>Delete</button>
+                  <button className="btn secondary" type="button" onClick={() => setPendingStartEdit(child)}>{t.common.edit}</button>
+                  <button className="btn danger" type="button" onClick={() => setPendingDelete(child)}>{t.common.delete}</button>
                 </div>
               </div>
             ))}
           </div>
           {!children.length && (
             <div className="empty-card">
-              <p>No child profiles yet. Add a display name in the form to create one.</p>
+              <p>{t.children.empty}</p>
             </div>
           )}
         </div>
         <form onSubmit={onSubmit} className="form-card children-form">
-          <h3>{editing ? `Edit ${editing.displayName}` : 'Add child profile'}</h3>
-          <label className="field">Display name
+          <h3>{editing ? `${t.common.edit} ${editing.displayName}` : t.children.add}</h3>
+          <label className="field">{t.children.displayName}
             <input name="displayName" required defaultValue={editing?.displayName || ''} key={editing?.id || 'new'} />
           </label>
-          <label className="field">Age range
+          <label className="field">{t.children.ageRange}
             <select name="ageRange" defaultValue={editing?.ageRange || '13-15'} key={`${editing?.id || 'new'}-age`}>
               <option>8-12</option>
               <option>13-15</option>
@@ -109,18 +111,18 @@ export default function ChildrenPage() {
             </select>
           </label>
           {error && <div className="error">{error}</div>}
-          <button className="btn">{editing ? 'Save changes' : 'Add child profile'}</button>
+          <button className="btn">{editing ? t.children.saveChanges : t.children.add}</button>
           {editing && (
-            <button className="btn ghost" type="button" onClick={() => setEditing(null)}>Cancel edit</button>
+            <button className="btn ghost" type="button" onClick={() => setEditing(null)}>{t.children.cancelEdit}</button>
           )}
         </form>
       </div>
 
       <ConfirmDialog
         open={Boolean(pendingStartEdit)}
-        title={`Edit ${pendingStartEdit?.displayName || 'this profile'}?`}
-        body="You can update the display name and age range. Nothing is saved until you confirm the changes."
-        confirmLabel="Edit"
+        title={t.children.editTitle}
+        body={t.children.editBody}
+        confirmLabel={t.common.edit}
         onCancel={() => setPendingStartEdit(null)}
         onConfirm={() => {
           if (!pendingStartEdit) return;
@@ -130,17 +132,17 @@ export default function ChildrenPage() {
       />
       <ConfirmDialog
         open={Boolean(pendingEdit)}
-        title="Save these changes?"
-        body="This updates the child’s display name and age range only. No extra personal details are stored."
-        confirmLabel="Save"
+        title={t.children.saveTitle}
+        body={t.children.saveBody}
+        confirmLabel={t.common.save}
         onCancel={() => setPendingEdit(null)}
         onConfirm={confirmEdit}
       />
       <ConfirmDialog
         open={Boolean(pendingDelete)}
-        title="Delete this child profile?"
-        body="This removes the profile from your family list. If this child still has incidents, delete those from the evidence locker first."
-        confirmLabel="Delete"
+        title={t.children.deleteTitle}
+        body={t.children.deleteBody}
+        confirmLabel={t.common.delete}
         danger
         onCancel={() => setPendingDelete(null)}
         onConfirm={confirmDelete}

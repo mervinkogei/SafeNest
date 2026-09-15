@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { currentUser } from '@/lib/api';
 import BackLink from '@/components/BackLink';
-import { education, Lang } from '@/lib/i18n';
 import { Icon } from '@/components/Icons';
+import { useLang } from '@/lib/language';
 
 const STEP_ICONS = ['book', 'hand', 'spark', 'phone'] as const;
 const YOUNG_ICONS = ['heart', 'lock', 'alert', 'shield'];
@@ -14,17 +14,12 @@ const SIGN_ICONS = ['chat', 'eye', 'alert', 'users'];
 const EVIDENCE_ICONS = ['eye', 'lock', 'book', 'folder'];
 
 export default function LearnPage() {
-  const [lang, setLang] = useState<Lang>('en');
+  const { t, e } = useLang();
   const [back, setBack] = useState('/');
-  const e = education[lang];
 
   useEffect(() => {
-    const sync = () => setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
-    sync();
     const account = currentUser();
     setBack(account?.role === 'CHILD' ? '/child' : account ? '/parent' : '/');
-    window.addEventListener('safenest-lang', sync);
-    return () => window.removeEventListener('safenest-lang', sync);
   }, []);
 
   return (
@@ -33,22 +28,20 @@ export default function LearnPage() {
 
       <section className="hero learn-hero">
         <div>
-          <p className="kicker">Safety guide · Kenya</p>
-          <h1>Learn before you record an incident</h1>
-          <p className="muted" style={{ fontSize: '1.12rem', lineHeight: 1.55 }}>
-            This guide is public. You do not need an account to read it. An account is only for keeping evidence and asking a trusted adult for help.
-          </p>
+          <p className="kicker">{t.learn.kicker}</p>
+          <h1>{t.learn.title}</h1>
+          <p className="muted" style={{ fontSize: '1.12rem', lineHeight: 1.55 }}>{t.learn.intro}</p>
           <div className="learn-jumps">
-            <a href="#young"><Icon name="heart" size={16} /> Young people</a>
-            <a href="#adults"><Icon name="users" size={16} /> Caregivers</a>
-            <a href="#signs"><Icon name="alert" size={16} /> Warning signs</a>
-            <a href="#evidence"><Icon name="folder" size={16} /> Evidence</a>
+            <a href="#young"><Icon name="heart" size={16} /> {t.learn.jumpYoung}</a>
+            <a href="#adults"><Icon name="users" size={16} /> {t.learn.jumpAdults}</a>
+            <a href="#signs"><Icon name="alert" size={16} /> {t.learn.jumpSigns}</a>
+            <a href="#evidence"><Icon name="folder" size={16} /> {t.learn.jumpEvidence}</a>
           </div>
           <div className="actions">
             <button className="btn" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
-              <Icon name="spark" size={18} /> Ask SafeNest AI
+              <Icon name="spark" size={18} /> {t.home.askAi}
             </button>
-            <Link className="btn secondary" href="/role">I am ready to record</Link>
+            <Link className="btn secondary" href="/role">{t.learn.ready}</Link>
           </div>
         </div>
         <aside className="learn-hero-art" aria-hidden>
@@ -71,7 +64,7 @@ export default function LearnPage() {
 
       <section className="section">
         <div className="section-intro">
-          <p className="kicker">Start here</p>
+          <p className="kicker">{t.learn.startHere}</p>
           <h2>{e.howTitle}</h2>
         </div>
         <div className="how-track">
@@ -97,7 +90,7 @@ export default function LearnPage() {
           </span>
         </div>
         <div>
-          <p className="kicker">Young people</p>
+          <p className="kicker">{t.home.youngPeople}</p>
           <h2>{e.youngTitle}</h2>
           <div className="icon-list">
             {e.young.map((item, index) => (
@@ -115,7 +108,7 @@ export default function LearnPage() {
 
       <section className="section split-block reverse" id="adults">
         <div>
-          <p className="kicker">Caregivers</p>
+          <p className="kicker">{t.home.caregivers}</p>
           <h2>{e.adultTitle}</h2>
           <div className="icon-list">
             {e.adult.map((item, index) => (
@@ -140,7 +133,7 @@ export default function LearnPage() {
 
       <section className="section" id="signs">
         <div className="section-intro">
-          <p className="kicker">Watch for</p>
+          <p className="kicker">{t.home.watchFor}</p>
           <h2>{e.signsTitle}</h2>
         </div>
         <div className="sign-grid">
@@ -156,7 +149,7 @@ export default function LearnPage() {
 
       <section className="section" id="evidence">
         <div className="section-intro">
-          <p className="kicker">Keep a calm record</p>
+          <p className="kicker">{t.learn.calmRecord}</p>
           <h2>{e.evidenceTitle}</h2>
         </div>
         <div className="how-track">
@@ -174,14 +167,14 @@ export default function LearnPage() {
 
       <section className="section">
         <div className="section-intro">
-          <p className="kicker">People, not only AI</p>
+          <p className="kicker">{t.home.peopleNotAi}</p>
           <h2>{e.urgentTitle}</h2>
         </div>
         <div className="grid-3">
           {[
-            { icon: 'phone', title: 'Childline Kenya', phone: '116', body: 'Free, 24 hours, for children and caregivers.' },
-            { icon: 'alert', title: 'Emergency', phone: '999 / 112', body: 'If someone is in immediate danger.' },
-            { icon: 'heart', title: 'GBV Helpline', phone: '1195', body: 'Support after sexual or gender-based harm.' },
+            { icon: 'phone', title: t.home.childline, phone: '116', body: t.learn.helpline116 },
+            { icon: 'alert', title: t.home.emergency, phone: '999 / 112', body: t.learn.helpline999 },
+            { icon: 'heart', title: t.home.gbv, phone: '1195', body: t.learn.helpline1195 },
           ].map((item) => (
             <article className="edu-card helpline-card" key={item.phone}>
               <span className="edu-icon"><Icon name={item.icon} /></span>
@@ -197,12 +190,12 @@ export default function LearnPage() {
 
       <section className="section cta-banner">
         <div>
-          <h2>Ready to record what happened?</h2>
-          <p className="muted">Create a free family account when you want to keep evidence in one place. You can still ask SafeNest AI first.</p>
+          <h2>{t.learn.ctaTitle}</h2>
+          <p className="muted">{t.learn.ctaBody}</p>
         </div>
         <div className="actions">
-          <Link className="btn" href="/role">I am ready to record an incident</Link>
-          <Link className="btn secondary" href="/">Back to home</Link>
+          <Link className="btn" href="/role">{t.learn.readyIncident}</Link>
+          <Link className="btn secondary" href="/">{t.learn.backHome}</Link>
         </div>
       </section>
     </main>

@@ -7,6 +7,7 @@ import BackLink from '@/components/BackLink';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import IncidentBriefing from '@/components/IncidentBriefing';
 import type { IncidentBriefing as Briefing } from '@/lib/briefing';
+import { useLang } from '@/lib/language';
 
 type Incident = {
   id: string;
@@ -20,6 +21,7 @@ type Incident = {
 };
 
 export default function LockerDetail() {
+  const { t } = useLang();
   const { id } = useParams<{ id: string }>();
   const [incident, setIncident] = useState<Incident | null>(null);
   const [briefing, setBriefing] = useState<Briefing | null>(null);
@@ -55,7 +57,7 @@ export default function LockerDetail() {
       setIncident(await api(`/incidents/${id}`));
       setTimeout(() => briefingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not generate the briefing.');
+      setError(err instanceof Error ? err.message : t.locker.fail);
     } finally {
       setGenerating(false);
     }
@@ -64,28 +66,28 @@ export default function LockerDetail() {
   if (!incident) {
     return (
       <main className="page">
-        <BackLink href="/locker" label="Evidence locker" />
-        <p>Opening locker…</p>
+        <BackLink href="/locker" label={t.locker.title} />
+        <p>{t.locker.opening}</p>
       </main>
     );
   }
 
   return (
     <main className="page">
-      <BackLink href="/locker" label="Evidence locker" />
-      <h1>Evidence locker</h1>
+      <BackLink href="/locker" label={t.locker.title} />
+      <h1>{t.locker.title}</h1>
       <div className="locker-detail">
         <div className="card">
-          <b style={{ textTransform: 'capitalize' }}>{(incident.riskType || 'incident').replaceAll('_', ' ')} #{incident.id.slice(-3)}</b>
+          <b style={{ textTransform: 'capitalize' }}>{(incident.riskType || t.locker.incident).replaceAll('_', ' ')} #{incident.id.slice(-3)}</b>
           <p className="tiny muted">{new Date(incident.createdAt).toLocaleDateString()} · {incident.platform}</p>
           <span className={`badge ${incident.severity || 'medium'}`}>{incident.severity || incident.status}</span>
         </div>
         <div className="card">
-          <b>AI assessment</b>
-          <p>{incident.assessment?.explanation || 'Not analysed yet. Generating a briefing will also create a careful assessment.'}</p>
-          <p className="tiny">Status: {incident.status.replaceAll('_', ' ')}</p>
+          <b>{t.locker.assessment}</b>
+          <p>{incident.assessment?.explanation || t.locker.notAnalysed}</p>
+          <p className="tiny">{t.locker.status}: {incident.status.replaceAll('_', ' ')}</p>
           <button className="btn" style={{ marginTop: 12 }} type="button" onClick={generateBriefing} disabled={generating}>
-            {generating ? 'Preparing briefing…' : briefing ? 'Refresh incident briefing' : 'Generate incident briefing'}
+            {generating ? t.locker.preparing : briefing ? t.locker.refresh : t.locker.generate}
           </button>
           {error && <p className="tiny" style={{ color: '#9f1239', marginTop: 8 }}>{error}</p>}
         </div>
@@ -95,15 +97,15 @@ export default function LockerDetail() {
           <IncidentBriefing doc={briefing} />
         </div>
       )}
-      <h3>Evidence</h3>
-      {incident.evidence.length === 0 && <p className="muted">No screenshot stored yet.</p>}
+      <h3>{t.locker.evidence}</h3>
+      {incident.evidence.length === 0 && <p className="muted">{t.locker.noShot}</p>}
       <div className="evidence-grid">
         {incident.evidence.map((item, index) => (
           <div className="card" key={item.id}>
-            <p>{item.fileType?.startsWith('image/') ? `Screenshot ${index + 1}` : `File ${index + 1}`}</p>
+            <p>{item.fileType?.startsWith('image/') ? `${t.locker.screenshot} ${index + 1}` : `${t.locker.file} ${index + 1}`}</p>
             {item.fileType?.startsWith('image/') !== false ? (
               <img
-                alt={`Evidence ${index + 1}`}
+                alt={`${t.locker.evidence} ${index + 1}`}
                 style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover' }}
                 ref={(node) => { if (node && (item.fileType?.startsWith('image/') || !item.fileType)) loadImage(item.fileUrl, node); }}
               />
@@ -114,18 +116,18 @@ export default function LockerDetail() {
               className="btn secondary"
               style={{ marginTop: 10, width: '100%' }}
               onClick={() => setPendingDelete(item.id)}
-            >Delete</button>
+            >{t.common.delete}</button>
           </div>
         ))}
       </div>
       <button className="btn danger" type="button" onClick={() => setPendingIncidentDelete(true)}>
-        Delete this incident
+        {t.locker.deleteIncident}
       </button>
       <ConfirmDialog
         open={Boolean(pendingDelete)}
-        title="Delete this screenshot?"
-        body="This removes the saved image from the evidence locker. You cannot undo it."
-        confirmLabel="Delete"
+        title={t.locker.deleteShot}
+        body={t.locker.deleteShotBody}
+        confirmLabel={t.common.delete}
         danger
         onCancel={() => setPendingDelete(null)}
         onConfirm={async () => {
@@ -137,9 +139,9 @@ export default function LockerDetail() {
       />
       <ConfirmDialog
         open={pendingIncidentDelete}
-        title="Delete this whole incident?"
-        body="The report, screenshots, and AI notes for this incident will be removed."
-        confirmLabel="Delete incident"
+        title={t.locker.deleteAll}
+        body={t.locker.deleteAllBody}
+        confirmLabel={t.locker.deleteIncidentConfirm}
         danger
         onCancel={() => setPendingIncidentDelete(false)}
         onConfirm={async () => {

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import { Icon } from '@/components/Icons';
+import { useLang } from '@/lib/language';
 
 function todayIso() {
   const now = new Date();
@@ -13,6 +14,7 @@ function todayIso() {
 }
 
 export default function EvidencePage() {
+  const { t } = useLang();
   const { id } = useParams<{ id: string }>();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function EvidencePage() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (occurredOn > maxDate) {
-      setError('The date this happened cannot be in the future.');
+      setError(t.report.futureDate);
       return;
     }
     setLoading(true);
@@ -36,7 +38,7 @@ export default function EvidencePage() {
       await api(`/incidents/${id}/analyze`, { method: 'POST' });
       window.location.href = `/incidents/${id}/analysis`;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not analyse yet');
+      setError(err instanceof Error ? err.message : t.report.analyseFail);
     } finally {
       setLoading(false);
     }
@@ -46,12 +48,12 @@ export default function EvidencePage() {
     <main className="page">
       <div className="report-sheet">
         <BackLink href="/report" />
-        <h1>Add information</h1>
-        <p className="tiny muted">A screenshot or file helps. If you cannot upload one, describe what you saw. SafeNest never asks for account passwords.</p>
+        <h1>{t.report.addInfo}</h1>
+        <p className="tiny muted">{t.report.addHint}</p>
         <form onSubmit={onSubmit} className="report-form">
           <label className="upload-drop">
             <Icon name="folder" size={28} />
-            <span>Upload screenshots or other resources</span>
+            <span>{t.report.upload}</span>
             <input
               name="files"
               type="file"
@@ -67,21 +69,21 @@ export default function EvidencePage() {
               ))}
             </ul>
           )}
-          <label className="field">Describe what happened
-            <textarea name="note" rows={5} placeholder="They keep calling me names in the class WhatsApp group and told everyone to laugh at me." />
+          <label className="field">{t.report.describe}
+            <textarea name="note" rows={5} placeholder={t.report.placeholder} />
           </label>
           <div className="report-two">
-            <label className="field">Platform
+            <label className="field">{t.report.platform}
               <select name="platform" defaultValue="WhatsApp">
                 <option>WhatsApp</option>
                 <option>TikTok</option>
                 <option>Instagram</option>
                 <option>Facebook</option>
                 <option>SMS</option>
-                <option>Other</option>
+                <option>{t.report.other}</option>
               </select>
             </label>
-            <label className="field">Date it happened
+            <label className="field">{t.report.date}
               <input
                 type="date"
                 name="occurredOn"
@@ -91,7 +93,7 @@ export default function EvidencePage() {
                 onChange={(event) => {
                   const next = event.target.value;
                   if (next > maxDate) {
-                    setError('The date this happened cannot be in the future.');
+                    setError(t.report.futureDate);
                     setOccurredOn(maxDate);
                     return;
                   }
@@ -102,7 +104,7 @@ export default function EvidencePage() {
             </label>
           </div>
           {error && <div className="error">{error}</div>}
-          <button className="btn" disabled={loading}>{loading ? 'Analysing safely…' : 'Analyze Safely'}</button>
+          <button className="btn" disabled={loading}>{loading ? t.report.analysing : t.report.analyse}</button>
         </form>
       </div>
     </main>

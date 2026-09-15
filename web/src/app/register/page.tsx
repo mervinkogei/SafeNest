@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { api, setSession } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import PasswordField from '@/components/PasswordField';
+import { useLang } from '@/lib/language';
 
 export default function RegisterPage() {
+  const { t } = useLang();
   const role = useMemo(() => {
     if (typeof window === 'undefined') return 'PARENT';
     return new URLSearchParams(window.location.search).get('role') || localStorage.getItem('safenest_role') || 'PARENT';
@@ -33,7 +35,7 @@ export default function RegisterPage() {
       setSession(data.token, data.user);
       window.location.href = role === 'CHILD' ? '/child' : '/parent';
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create account');
+      setError(err instanceof Error ? err.message : t.auth.createFail);
     } finally {
       setLoading(false);
     }
@@ -43,26 +45,26 @@ export default function RegisterPage() {
     <main className="page">
       <div className="form-card">
         <BackLink href="/role" />
-        <h1>Create your SafeNest</h1>
-        <p className="muted tiny">We only ask for a name and email. Children never share social-media passwords.</p>
+        <h1>{t.auth.createTitle}</h1>
+        <p className="muted tiny">{t.auth.createHint}</p>
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
-          <label className="field">Name
-            <input name="name" required placeholder={role === 'CHILD' ? 'A name you like' : 'Your name'} />
+          <label className="field">{t.common.name}
+            <input name="name" required placeholder={role === 'CHILD' ? t.auth.nameChild : t.auth.nameAdult} />
           </label>
-          <label className="field">Email
+          <label className="field">{t.common.email}
             <input name="email" type="email" required placeholder="you@email.com" autoComplete="email" />
           </label>
-          <PasswordField name="password" required minLength={8} placeholder="At least 8 characters" autoComplete="new-password" />
+          <PasswordField name="password" required minLength={8} placeholder={t.auth.passwordHint} autoComplete="new-password" />
           {role === 'CHILD' && (
-            <label className="field">Family invite code
+            <label className="field">{t.auth.invite}
               <input name="inviteCode" placeholder="NEST42" />
             </label>
           )}
           {error && <div className="error">{error}</div>}
-          <button className="btn" disabled={loading}>{loading ? 'Saving…' : 'Continue'}</button>
+          <button className="btn" disabled={loading}>{loading ? t.auth.saving : t.common.continue}</button>
         </form>
         <p className="auth-links">
-          <Link href="/login">Already have an account? Sign in</Link>
+          <Link href="/login">{t.auth.haveAccount}</Link>
         </p>
       </div>
     </main>

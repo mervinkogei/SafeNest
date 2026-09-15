@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { api, currentUser } from '@/lib/api';
-import { copy, Lang } from '@/lib/i18n';
+import { useLang } from '@/lib/language';
 
 export default function ChildHome() {
-  const [lang, setLang] = useState<Lang>('en');
+  const { t } = useLang();
   const [user, setUser] = useState<{ name?: string } | null>(null);
-  const t = copy[lang];
 
   useEffect(() => {
-    setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
     const account = currentUser();
     if (!account) {
       window.location.href = '/login';
@@ -28,7 +26,7 @@ export default function ChildHome() {
         childId,
         category,
         platform: 'WhatsApp',
-        description: category === 'worried' ? 'I am worried about something online.' : '',
+        description: category === 'worried' ? t.copy.worried : '',
       }),
     });
     window.location.href = `/report/${incident.id}/evidence`;
@@ -36,20 +34,20 @@ export default function ChildHome() {
 
   return (
     <main className="page">
-      <h2 style={{ margin: 0 }}>Hi {user?.name || ''} 👋</h2>
-      <p>{t.okayOnline}</p>
+      <h2 style={{ margin: 0 }}>{t.child.hi} {user?.name || ''} 👋</h2>
+      <p>{t.copy.okayOnline}</p>
       <div className="grid-2" style={{ marginTop: 16 }}>
       <button className="choice" onClick={() => start('unsure')}>
-        <b>{t.askHelp}</b>
-        <span className="tiny muted">You will not get in trouble for telling us.</span>
+        <b>{t.copy.askHelp}</b>
+        <span className="tiny muted">{t.child.noTrouble}</span>
       </button>
       <button className="choice" onClick={() => start('worried')}>
-        <b>{t.worried}</b>
-        <span className="tiny muted">A trusted adult can look with you.</span>
+        <b>{t.copy.worried}</b>
+        <span className="tiny muted">{t.child.adultLook}</span>
       </button>
       <a className="choice" href="/learn">
-        <b>{t.learn}</b>
-        <span className="tiny muted">Short, kind guidance. No scary language.</span>
+        <b>{t.copy.learn}</b>
+        <span className="tiny muted">{t.child.kindGuide}</span>
       </a>
       </div>
     </main>

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { copy, education, Lang } from '@/lib/i18n';
 import { API_BASE } from '@/lib/api';
 import { Icon } from '@/components/Icons';
+import { useLang } from '@/lib/language';
 
 type Helpline = { id: string; name: string; phone?: string | null; description: string };
 
@@ -14,21 +14,21 @@ const ADULT_ICONS = ['users', 'folder', 'chat', 'phone'];
 const SIGN_ICONS = ['chat', 'eye', 'alert', 'users'];
 
 export default function WelcomePage() {
-  const [lang, setLang] = useState<Lang>('en');
+  const { t, e } = useLang();
   const [lines, setLines] = useState<Helpline[]>([]);
-  const t = copy[lang];
-  const e = education[lang];
 
   useEffect(() => {
-    const sync = () => setLang((localStorage.getItem('safenest_lang') as Lang) || 'en');
-    sync();
-    window.addEventListener('safenest-lang', sync);
     fetch(`${API_BASE}/resources/public`)
       .then((res) => res.json())
       .then((data) => Array.isArray(data) ? setLines(data) : setLines([]))
       .catch(() => setLines([]));
-    return () => window.removeEventListener('safenest-lang', sync);
   }, []);
+
+  const fallback = [
+    { id: '116', name: t.home.childline, phone: '116', description: t.home.line116 },
+    { id: '999', name: t.home.emergency, phone: '999 / 112', description: t.home.line999 },
+    { id: '1195', name: t.home.gbv, phone: '1195', description: t.home.line1195 },
+  ];
 
   return (
     <main className="page">
@@ -38,10 +38,10 @@ export default function WelcomePage() {
           <h1>{e.heroTitle}</h1>
           <p className="muted" style={{ fontSize: '1.15rem', lineHeight: 1.55 }}>{e.heroBody}</p>
           <div className="actions">
-            <Link className="btn secondary" href="/learn">{t.learnFirst}</Link>
-            <Link className="btn" href="/role">{t.getStarted}</Link>
+            <Link className="btn secondary" href="/learn">{t.copy.learnFirst}</Link>
+            <Link className="btn" href="/role">{t.copy.getStarted}</Link>
             <button className="btn ghost" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
-              <Icon name="spark" size={18} /> Ask SafeNest AI
+              <Icon name="spark" size={18} /> {t.home.askAi}
             </button>
           </div>
         </div>
@@ -51,21 +51,21 @@ export default function WelcomePage() {
             <span className="orb orb-b" />
             <span className="hero-mark"><Icon name="spark" size={32} /></span>
           </div>
-          <p className="kicker">Live AI guide</p>
-          <h2>Talk with SafeNest, not only analyse later</h2>
+          <p className="kicker">{t.home.liveGuide}</p>
+          <h2>{t.home.talkTitle}</h2>
           <div className="mini-chat">
-            <div className="mini-row user">A group is mocking my daughter. What do I do first?</div>
-            <div className="mini-row guide">Stay calm, save the screenshots, and do not reply in the group. I can walk you through recording this — I am AI, not a counsellor. Childline 116 is there if she needs a person now.</div>
+            <div className="mini-row user">{t.home.miniUser}</div>
+            <div className="mini-row guide">{t.home.miniGuide}</div>
           </div>
           <button className="btn" type="button" onClick={() => window.dispatchEvent(new Event('safenest-ai-open'))}>
-            Open the AI guide
+            {t.home.openGuide}
           </button>
         </aside>
       </section>
 
       <section className="section" id="how-it-works">
         <div className="section-intro">
-          <p className="kicker">Four calm steps</p>
+          <p className="kicker">{t.home.fourSteps}</p>
           <h2>{e.howTitle}</h2>
         </div>
         <div className="how-track">
@@ -88,7 +88,7 @@ export default function WelcomePage() {
           <Icon name="heart" size={64} />
         </div>
         <div>
-          <p className="kicker">Young people</p>
+          <p className="kicker">{t.home.youngPeople}</p>
           <h2>{e.youngTitle}</h2>
           <div className="icon-list">
             {e.young.map((item, index) => (
@@ -106,7 +106,7 @@ export default function WelcomePage() {
 
       <section className="section split-block reverse">
         <div>
-          <p className="kicker">Caregivers</p>
+          <p className="kicker">{t.home.caregivers}</p>
           <h2>{e.adultTitle}</h2>
           <div className="icon-list">
             {e.adult.map((item, index) => (
@@ -128,7 +128,7 @@ export default function WelcomePage() {
 
       <section className="section">
         <div className="section-intro">
-          <p className="kicker">Watch for</p>
+          <p className="kicker">{t.home.watchFor}</p>
           <h2>{e.signsTitle}</h2>
         </div>
         <div className="sign-grid">
@@ -144,16 +144,12 @@ export default function WelcomePage() {
 
       <section className="section">
         <div className="section-intro">
-          <p className="kicker">People, not only AI</p>
+          <p className="kicker">{t.home.peopleNotAi}</p>
           <h2>{e.urgentTitle}</h2>
           <p className="muted">{e.urgentBody}</p>
         </div>
         <div className="grid-3">
-          {(lines.length ? lines : [
-            { id: '116', name: 'Childline Kenya', phone: '116', description: 'Free 24-hour child helpline.' },
-            { id: '999', name: 'Emergency', phone: '999 / 112', description: 'If someone is in immediate danger.' },
-            { id: '1195', name: 'GBV Helpline', phone: '1195', description: 'Toll-free support after sexual or gender-based harm.' },
-          ]).map((item) => (
+          {(lines.length ? lines : fallback).map((item) => (
             <article className="edu-card helpline-card" key={item.id}>
               <span className="edu-icon"><Icon name="phone" /></span>
               <h3>{item.name}</h3>
@@ -170,8 +166,8 @@ export default function WelcomePage() {
           <p className="muted">{e.ctaBody}</p>
         </div>
         <div className="actions">
-          <Link className="btn" href="/role">{t.getStarted}</Link>
-          <Link className="btn secondary" href="/learn">Open the full safety guide</Link>
+          <Link className="btn" href="/role">{t.copy.getStarted}</Link>
+          <Link className="btn secondary" href="/learn">{t.home.fullGuide}</Link>
         </div>
       </section>
     </main>
