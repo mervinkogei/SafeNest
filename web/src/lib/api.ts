@@ -1,4 +1,10 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const PRODUCTION_API = 'https://api-blond-delta.vercel.app/api';
+const DEV_API = 'http://localhost:4000/api';
+
+export const API_BASE = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'production' ? PRODUCTION_API : DEV_API)
+).replace(/\/$/, '');
 
 export function getToken() {
   if (typeof window === 'undefined') return '';
