@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { api, currentUser } from '@/lib/api';
 import BackLink from '@/components/BackLink';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useLang } from '@/lib/language';
@@ -18,12 +18,27 @@ export default function ChildrenPage() {
   const [pendingStartEdit, setPendingStartEdit] = useState<Child | null>(null);
 
   function load() {
-    api('/children').then(setChildren);
+    api('/children').then(setChildren).catch((err) => {
+      setError(err instanceof Error ? err.message : t.children.addFail);
+      setChildren([]);
+    });
   }
-  useEffect(load, []);
+  useEffect(() => {
+    const account = currentUser();
+    if (!account) {
+      window.location.href = '/login';
+      return;
+    }
+    if (account.role && account.role !== 'PARENT') {
+      window.location.href = '/child';
+      return;
+    }
+    load();
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError('');
     const form = new FormData(event.currentTarget);
     const displayName = String(form.get('displayName') || '');
     const ageRange = String(form.get('ageRange') || '13-15');

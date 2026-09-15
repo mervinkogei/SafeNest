@@ -102,7 +102,12 @@ export class AuthService {
 
   private async issue(userId: string) {
     const user = await this.me(userId);
-    const token = await this.jwt.signAsync({ sub: userId, role: user.role });
+    const token = await this.jwt.signAsync({
+      sub: userId,
+      role: user.role,
+      email: user.email,
+      name: user.name,
+    });
     return { token, user };
   }
 }

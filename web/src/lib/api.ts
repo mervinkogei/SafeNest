@@ -25,8 +25,14 @@ export function clearSession() {
 
 export function currentUser() {
   if (typeof window === 'undefined') return null;
+  if (!getToken()) return null;
   const raw = localStorage.getItem('safenest_user');
   return raw ? JSON.parse(raw) : null;
+}
+
+function errorMessage(data: { message?: string | string[]; error?: string }) {
+  if (Array.isArray(data.message)) return data.message[0] || 'Something went wrong';
+  return data.message || data.error || 'Something went wrong';
 }
 
 export async function api(path: string, options: RequestInit = {}) {
@@ -39,7 +45,14 @@ export async function api(path: string, options: RequestInit = {}) {
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message || data.error || 'Something went wrong');
+    if (res.status === 401 && !path.startsWith('/auth/') && typeof window !== 'undefined') {
+      clearSession();
+      const open = window.location.pathname;
+      if (!['/login', '/register', '/forgot-password', '/role'].includes(open)) {
+        window.location.href = '/login';
+      }
+    }
+    throw new Error(errorMessage(data));
   }
   return data;
 }
