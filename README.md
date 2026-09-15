@@ -13,7 +13,7 @@ A Kenyan-first online-safety companion for parents, caregivers, and young people
 5. Evidence is stored in a locker the family controls.
 6. Verified Kenyan resources are matched from a curated database — never invented by the model.
 
-## Screens
+## SafeNest Pages
 
 1. Welcome  
 2. Choose role  
